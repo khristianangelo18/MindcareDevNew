@@ -697,5 +697,7 @@ $recommendations = [
     // Smooth transition for icon
     icon.style.transition = 'transform 0.5s ease';
   </script>
+     <?php include 'beyond_widget.php'; ?>
+
 </body>
 </html>
