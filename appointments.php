@@ -238,54 +238,93 @@ if (empty($appointments) || !isset($appointments[0]['users'])) {
     body.dark-mode .card:hover {
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
     }
+body.dark-mode .table thead {
+  background: #2a2a2a !important;  /* darker header */
+}
 
+body.dark-mode .table tbody tr:hover {
+  background: rgba(90, 208, 190, 0.12) !important; /* subtle teal hover */
+}
+
+body.dark-mode .table td,
+body.dark-mode .table th {
+  color: var(--text-dark) !important; 
+  border-color: var(--border-color) !important;
+  background: var(--card-bg) !important;
+}
+
+body.dark-mode .table {
+  background: var(--card-bg);
+}
     /* Table */
     .table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 1rem;
-    }
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
 
-    .table thead {
-      background: var(--bg-light);
-    }
+.table thead {
+  background: var(--bg-light);
+}
 
-    .table th {
-      padding: 1rem;
-      text-align: left;
-      font-size: 0.875rem;
-      font-weight: 600;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      border-bottom: 2px solid var(--border-color);
-    }
+.table th {
+  padding: 1rem;
+  text-align: left;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 2px solid var(--border-color);
+  transition: color 0.3s ease;
+}
 
-    .table td {
-      padding: 1rem;
-      border-bottom: 1px solid var(--border-color);
-      font-size: 0.9rem;
-    }
+.table td {
+  padding: 1rem;
+  border-bottom: 1px solid var(--border-color);
+  font-size: 0.9rem;
+  color: var(--text-dark);
+  transition: color 0.3s ease;
+}
 
-    .table tbody tr:hover {
-      background: var(--bg-light);
-    }
+.table tbody tr:hover {
+  background: rgba(90, 208, 190, 0.05);
+}
+
+/* Ensure h5 headings in cards are visible in dark mode */
+.card h5 {
+  color: var(--text-dark);
+  transition: color 0.3s ease;
+}
 
     /* Status Badges */
     .badge {
-      padding: 0.375rem 0.75rem;
-      border-radius: 20px;
-      font-size: 0.75rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      display: inline-block;
-    }
+  padding: 0.375rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  display: inline-block;
+}
 
-    .status-confirmed { background: #28a745; color: white; }
-    .status-pending { background: #ffc107; color: #2b2f38; }
-    .status-completed { background: #17a2b8; color: white; }
-    .status-cancelled { background: #dc3545; color: white; }
+.status-confirmed {
+  background-color: #28a745;
+  color: white;
+}
+
+.status-pending {
+  background-color: #ffc107;
+  color: #2b2f38;
+}
+
+.status-completed {
+  background-color: #17a2b8;
+  color: white;
+}
+
+.status-cancelled {
+  background-color: #dc3545;
+  color: white;
+}
 
     /* Buttons */
     .btn {
