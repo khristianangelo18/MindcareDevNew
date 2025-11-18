@@ -210,7 +210,7 @@ if (isset($_SESSION['user']))
           <?php if (isset($_GET['error'])): ?>
             <div class="alert alert-danger"><?= htmlspecialchars($_GET['error']) ?></div>
           <?php endif; ?>
-          <form method="POST" action="login-handler.php" target="_self" id="loginForm">
+          <form method="POST" action="login-handler.php" id="loginForm">
             <input type="email" name="email" class="form-control mb-3" placeholder="Email" required>
             <div class="mb-3 password-wrapper">
               <input type="password" name="password" id="password" class="form-control" placeholder="Password" required>
@@ -234,6 +234,7 @@ if (isset($_SESSION['user']))
   </div>
 
   <script>
+    // Password toggle function
     function togglePassword() {
       const passwordField = document.getElementById("password");
       const toggleIcon = document.getElementById("toggleIcon");
@@ -248,20 +249,46 @@ if (isset($_SESSION['user']))
       }
     }
 
-    // FIX: Ensure form always submits in same window/tab
-    const loginForm = document.getElementById('loginForm');
-    if (loginForm) {
-      // Explicitly set target to _self
-      loginForm.setAttribute('target', '_self');
+    // CRITICAL FIX: Prevent form from opening in new window
+    document.addEventListener('DOMContentLoaded', function() {
+      const loginForm = document.getElementById('loginForm');
       
-      // Add submit event listener to ensure it stays in same tab
-      loginForm.addEventListener('submit', function(e) {
-        // Force the form to submit in the same window
-        this.target = '_self';
-        // Remove any potential target="_blank" that might be set by extensions
-        this.removeAttribute('data-target');
-      });
-    }
+      if (loginForm) {
+        // Remove any target attribute
+        loginForm.removeAttribute('target');
+        
+        // Intercept form submission
+        loginForm.addEventListener('submit', function(e) {
+          e.preventDefault(); // Stop default submission
+          
+          console.log('Form intercepted - submitting via JavaScript');
+          
+          // Submit the form programmatically in the same window
+          const formData = new FormData(this);
+          
+          fetch(this.action, {
+            method: 'POST',
+            body: formData
+          })
+          .then(response => {
+            // Get the redirect location from the response
+            if (response.redirected) {
+              // If PHP redirected, go to that URL in same window
+              window.location.href = response.url;
+            } else {
+              // If no redirect, reload to show error message
+              window.location.href = window.location.href;
+            }
+          })
+          .catch(error => {
+            console.error('Error:', error);
+            alert('Login failed. Please try again.');
+          });
+          
+          return false;
+        });
+      }
+    });
 
     // Dark Mode Toggle
     const themeToggle = document.getElementById('themeToggle');
