@@ -19,15 +19,27 @@ if ($hour >= 5 && $hour < 12) {
 
 $current_date = date('l, F j, Y, g:i A');
 
-$specialists = [
-  8 => [
-    'name' => 'Dr. Sophia Dela',
-    'role' => 'Psychologist',
-    'description' => 'Registered Psychologist',
-    'profile_pic' => 'images/Dr.Dela.jpg',
-    'location' => 'Pasig City',
-    'experience' => '1 Year',
-    'contact' => '+63 962 8469 320',
+// =========================================
+// DYNAMIC: Fetch specialists from Supabase
+// =========================================
+$specialistUsers = supabaseSelect(
+  'users',
+  ['role' => 'Specialist'],
+  'id,fullname,email,gender,created_at',
+  'fullname.asc'
+);
+
+// Transform to match existing structure with sensible defaults
+$specialists = [];
+foreach ($specialistUsers as $specialist) {
+  $specialists[$specialist['id']] = [
+    'name' => $specialist['fullname'],
+    'role' => 'Psychologist', // Default role (can be extended later with a specialist_type field in DB)
+    'description' => 'Registered Psychologist', // Default description
+    'profile_pic' => 'images/Dr.Dela.jpg', // Use same default image for all
+    'location' => 'Metro Manila', // Default location
+    'experience' => '2 Years', // Default experience
+    'contact' => 'Contact via platform', // Default contact message
     'availability' => [
       'Monday' => ['09:00 AM', '10:00 AM', '02:00 PM'],
       'Tuesday' => ['09:00 AM', '11:00 AM'],
@@ -35,24 +47,24 @@ $specialists = [
       'Thursday' => ['09:00 AM', '03:00 PM'],
       'Friday' => ['10:00 AM', '02:00 PM']
     ]
-  ],
-  9 => [
-    'name' => 'Dr. Reyes',
-    'role' => 'Psychiatrist',
-    'description' => 'Registered and Certified Psychiatrist',
-    'profile_pic' => 'images/Dr.Dela.jpg',
-    'location' => 'Pasig City',
-    'experience' => '5 Years',
-    'contact' => '+63 917 654 3210',
-    'availability' => [
-      'Monday' => ['08:00 AM', '01:00 PM'],
-      'Tuesday' => ['10:00 AM', '03:00 PM'],
-      'Wednesday' => ['09:00 AM', '11:00 AM'],
-      'Thursday' => ['08:00 AM', '12:00 PM'],
-      'Friday' => ['09:00 AM', '01:00 PM']
+  ];
+}
+
+// If no specialists found, show message (fallback)
+if (empty($specialists)) {
+  $specialists = [
+    0 => [
+      'name' => 'No Specialists Available',
+      'role' => 'N/A',
+      'description' => 'Please check back later',
+      'profile_pic' => 'images/Dr.Dela.jpg',
+      'location' => 'N/A',
+      'experience' => 'N/A',
+      'contact' => 'N/A',
+      'availability' => []
     ]
-  ]
-];
+  ];
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -135,92 +147,82 @@ $specialists = [
       text-decoration: none;
       text-transform: uppercase;
       letter-spacing: 0.5px;
-      transition: all 0.3s ease;
+      transition: all 0.2s ease;
     }
 
     .sidebar .nav-link:hover {
       background-color: rgba(90, 208, 190, 0.1);
-      color: #5ad0be;
+      color: var(--primary-teal);
     }
 
     .sidebar .nav-link.active {
-      background-color: #5ad0be;
-      color: #ffffff;
+      background-color: rgba(90, 208, 190, 0.15);
+      color: var(--primary-teal);
+      font-weight: 600;
     }
 
-    .sidebar .nav-link svg {
-      width: 18px;
-      height: 18px;
-      flex-shrink: 0;
-    }
-
-    /* Dark Mode Toggle Button */
+    /* Theme Toggle */
     .theme-toggle {
       margin-top: auto;
-      padding-top: 1rem;
+      padding: 0.5rem;
       border-top: 1px solid var(--border-color);
+      padding-top: 1rem;
     }
 
     .theme-toggle button {
       width: 100%;
-      padding: 0.65rem 1rem;
-      background: transparent;
+      padding: 0.5rem;
       border: 1px solid var(--border-color);
-      border-radius: 8px;
+      border-radius: 6px;
+      background-color: var(--card-bg);
       color: var(--text-dark);
-      font-size: 0.625rem;
-      font-weight: 500;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 0.5rem;
+      cursor: pointer;
       transition: all 0.3s ease;
     }
 
     .theme-toggle button:hover {
-      background-color: rgba(90, 208, 190, 0.1);
+      background-color: var(--primary-teal);
+      color: white;
       border-color: var(--primary-teal);
-      color: var(--primary-teal);
     }
 
-    /* Main Content Area */
+    /* Main Wrapper */
     .main-wrapper {
       margin-left: 250px;
-      padding: 2rem; /* FIXED: Changed from 2rem 3rem to match dashboard */
-      width: calc(100% - 250px);
-      min-height: 100vh;
-      background-color: var(--bg-light);
+      padding: 2rem 3rem;
+      max-width: 1400px;
     }
 
-    /* FIXED: Header - Exact same styles as dashboard.php */
+    /* Page Header */
     .page-header {
       margin-bottom: 2rem;
-      margin-top: 0; /* FIXED: Ensure no top margin like dashboard */
     }
 
     .page-header h1 {
-      font-size: 2rem;
-      font-weight: 700;
+      font-size: 1.75rem;
+      font-weight: 600;
       color: var(--text-dark);
-      margin-bottom: 0.25rem; /* FIXED: Changed from 0.5rem to match dashboard */
+      margin-bottom: 0.25rem;
       transition: color 0.3s ease;
     }
 
-    .page-header h1 .user-name {
+    .page-header .user-name {
       color: var(--primary-teal);
     }
 
-    .page-header .date-time {
-      color: var(--text-muted); /* FIXED: Changed to match dashboard */
-      font-size: 0.95rem; /* FIXED: Changed from 1.125rem to match dashboard */
+    .date-time {
+      font-size: 0.875rem;
+      color: var(--text-muted);
       transition: color 0.3s ease;
     }
 
+    /* Section Heading */
     .section-heading {
-      font-size: 2.5rem;
+      font-size: 1.5rem;
       font-weight: 700;
       color: var(--text-dark);
       margin-bottom: 0.5rem;
@@ -232,8 +234,8 @@ $specialists = [
     }
 
     .section-subtext {
-      color: var(--text-dark);
-      font-size: 1rem;
+      font-size: 0.9375rem;
+      color: var(--text-muted);
       margin-bottom: 2rem;
       transition: color 0.3s ease;
     }
@@ -475,52 +477,52 @@ $specialists = [
       padding: 0.625rem 1.25rem;
       border-radius: 6px;
       font-size: 0.875rem;
-      font-weight: 500;
+      font-weight: 600;
       cursor: pointer;
-      transition: all 0.2s ease;
-      display: inline-flex;
+      transition: all 0.2s;
+      display: flex;
       align-items: center;
-      justify-content: center;
       gap: 0.5rem;
     }
 
     .btn-book-specialist:hover {
-      background: #138f7d;
+      background: #148e7f;
+      transform: translateY(-1px);
     }
 
     /* Back Button */
     .back-button {
+      background: var(--card-bg);
+      color: var(--text-dark);
+      border: 1px solid var(--border-color);
+      padding: 0.625rem 1.125rem;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
       display: inline-flex;
       align-items: center;
       gap: 0.5rem;
-      color: var(--text-muted);
-      background: transparent;
-      border: 1px solid var(--border-color);
-      padding: 0.75rem 1.5rem;
-      border-radius: 8px;
-      font-size: 0.9rem;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      margin-bottom: 2rem;
+      margin-bottom: 1.5rem;
     }
 
     .back-button:hover {
-      background: var(--bg-light);
+      background: var(--primary-teal);
+      color: white;
       border-color: var(--primary-teal);
-      color: var(--primary-teal);
     }
 
-    /* Selected Specialist Info Bar */
+    /* Selected Specialist Bar */
     .selected-specialist-bar {
-      background: linear-gradient(135deg, rgba(90, 208, 190, 0.1), rgba(90, 208, 190, 0.05));
-      border: 1px solid var(--primary-teal);
-      border-radius: 12px;
-      padding: 1.5rem;
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 1rem 1.5rem;
       margin-bottom: 2rem;
       display: flex;
-      align-items: center;
       justify-content: space-between;
+      align-items: center;
     }
 
     .selected-specialist-info {
@@ -530,22 +532,21 @@ $specialists = [
     }
 
     .selected-specialist-avatar {
-      width: 60px;
-      height: 60px;
+      width: 48px;
+      height: 48px;
       border-radius: 50%;
       object-fit: cover;
-      border: 2px solid var(--primary-teal);
     }
 
-    .selected-specialist-info h5 {
-      font-size: 1.25rem;
-      font-weight: 700;
+    #selectedSpecialistName {
+      font-size: 1rem;
+      font-weight: 600;
       color: var(--text-dark);
-      margin-bottom: 0.25rem;
+      margin: 0;
     }
 
-    .selected-specialist-info p {
-      font-size: 0.9rem;
+    #selectedSpecialistRole {
+      font-size: 0.8125rem;
       color: var(--text-muted);
       margin: 0;
     }
@@ -768,27 +769,10 @@ $specialists = [
       transform: none;
     }
 
-    /* Alert */
-    .alert {
-      border-radius: 8px;
-      border: none;
-      margin-bottom: 2rem;
-    }
-
-    .alert-success {
-      background-color: rgba(90, 208, 190, 0.1);
-      color: var(--primary-teal-dark);
-    }
-
-    /* Responsive */
-    @media (max-width: 1200px) {
+    /* Responsive Design */
+    @media (max-width: 1024px) {
       .booking-section {
         grid-template-columns: 1fr;
-      }
-      
-      .specialist-grid {
-        grid-template-columns: 1fr;
-        max-width: 600px;
       }
     }
 
@@ -796,38 +780,58 @@ $specialists = [
       .sidebar {
         transform: translateX(-100%);
       }
-      
+
       .main-wrapper {
         margin-left: 0;
-        width: 100%;
         padding: 1.5rem;
       }
 
-      .page-header h1 {
-        font-size: 1.75rem;
+      .specialist-card {
+        flex-direction: column;
       }
 
-      .section-heading {
-        font-size: 1.5rem;
+      .specialist-profile-pic {
+        width: 100%;
+        height: 200px;
+        border-right: none;
+        border-bottom: 3px solid var(--border-color);
       }
-      
-      .specialist-grid {
+
+      .specialist-info {
+        padding-left: 0;
+        padding: 1.5rem;
+      }
+
+      .specialist-header {
+        padding: 1.5rem 1.5rem 0 1.5rem;
+      }
+
+      .specialist-content {
+        padding: 0 1.5rem 1.5rem 1.5rem;
+      }
+
+      .specialist-details-grid {
         grid-template-columns: 1fr;
+      }
+
+      .specialist-details-right {
+        text-align: left;
       }
     }
   </style>
 </head>
 <body>
-
   <!-- Sidebar -->
   <div class="sidebar">
+    <!-- Logo -->
     <div class="logo-wrapper">
-      <img src="images/Mindcare.png" alt="MindCare Logo" class="logo-img" />
+      <img src="images/MindcareLogo.png" alt="MindCare Logo" class="logo-img" />
     </div>
 
-    <nav class="nav flex-column" style="flex: 1;">
+    <!-- Navigation Links -->
+    <nav>
       <a class="nav-link" href="dashboard.php">
-        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"></rect><rect x="14" y="3" width="7" height="5"></rect><rect x="14" y="12" width="7" height="9"></rect><rect x="3" y="16" width="7" height="5"></rect></svg>
         DASHBOARD
       </a>
       <a class="nav-link" href="assessment.php">
@@ -838,9 +842,9 @@ $specialists = [
         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
         BOOK APPOINTMENT
       </a>
-      <a class="nav-link" href="appointments.php">
-        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
-        MY APPOINTMENTS
+      <a class="nav-link" href="my_bookings.php">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><polyline points="17 11 19 13 23 9"></polyline></svg>
+        MY BOOKINGS
       </a>
       <a class="nav-link" href="profile.php">
         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
@@ -903,10 +907,10 @@ $specialists = [
             $isAvailable = !empty($specialist['availability']);
             
             // Default profile picture if not set
-            $profilePic = $specialist['profile_pic'] ?? 'images/default-doctor.jpg';
+            $profilePic = $specialist['profile_pic'] ?? 'images/Dr.Dela.jpg';
           ?>
           <div class="specialist-card" onclick="selectSpecialist(<?= $id ?>)">
-            <img src="<?= htmlspecialchars($profilePic) ?>" alt="<?= htmlspecialchars($specialist['name']) ?>" class="specialist-profile-pic" onerror="this.src='https://via.placeholder.com/200x200/5ad0be/ffffff?text=<?= substr($specialist['name'], 4, 1) ?>'">
+            <img src="<?= htmlspecialchars($profilePic) ?>" alt="<?= htmlspecialchars($specialist['name']) ?>" class="specialist-profile-pic" onerror="this.src='https://via.placeholder.com/200x200/5ad0be/ffffff?text=<?= substr($specialist['name'], 0, 1) ?>'">
             
             <div style="flex: 1; display: flex; flex-direction: column;">
               <div class="specialist-status <?= $isAvailable ? 'status-available' : 'status-unavailable' ?>">
@@ -921,17 +925,17 @@ $specialists = [
                     </div>
                     
                     <div class="specialist-name">
-                      <?= $specialist['name'] ?>
+                      <?= htmlspecialchars($specialist['name']) ?>
                       <span class="verified-icon">●</span>
                     </div>
                     
                     <div class="specialist-details-grid">
                       <!-- Left column: Description and Location -->
                       <div class="specialist-details-left">
-                        <div class="specialist-role"><?= $specialist['description'] ?></div>
+                        <div class="specialist-role"><?= htmlspecialchars($specialist['description']) ?></div>
                         <div class="specialist-detail-item">
                           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
-                          <span><?= $specialist['location'] ?></span>
+                          <span><?= htmlspecialchars($specialist['location']) ?></span>
                         </div>
                       </div>
                       
@@ -939,11 +943,11 @@ $specialists = [
                       <div class="specialist-details-right">
                         <div class="specialist-detail-item">
                           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
-                          <span><?= $specialist['contact'] ?></span>
+                          <span><?= htmlspecialchars($specialist['contact']) ?></span>
                         </div>
                         <div class="specialist-detail-item">
                           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
-                          <span><?= $specialist['experience'] ?> of Experience</span>
+                          <span><?= htmlspecialchars($specialist['experience']) ?> of Experience</span>
                         </div>
                       </div>
                     </div>
@@ -954,11 +958,12 @@ $specialists = [
               <div class="specialist-content">
                 <div class="specialist-next-info">
                   <span class="specialist-next-label">Next available at</span>
-                  <span class="specialist-next-time"><?= $nextTime ?> - <?= date('d', strtotime('next ' . $nextDay)) ?> Oct, <?= substr($nextDay, 0, 3) ?></span>
+                  <span class="specialist-next-time"><?= $nextTime ?> - <?= date('d', strtotime('next ' . $nextDay)) ?> <?= date('M', strtotime('next ' . $nextDay)) ?>, <?= substr($nextDay, 0, 3) ?></span>
                 </div>
                 
                 <button class="btn-book-specialist" onclick="event.stopPropagation(); selectSpecialist(<?= $id ?>)">
-                  📅 Book Appointment
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                  Book Appointment
                 </button>
               </div>
             </div>
@@ -980,13 +985,13 @@ $specialists = [
         <div class="selected-specialist-info">
           <img src="" alt="Specialist" id="selectedSpecialistAvatar" class="selected-specialist-avatar">
           <div>
-            <h5 id="selectedSpecialistName">Dr. Santos</h5>
+            <h5 id="selectedSpecialistName">Dr. Name</h5>
             <p id="selectedSpecialistRole">Psychologist</p>
           </div>
         </div>
       </div>
 
-      <!-- Booking Section (Calendar + Time Slots) -->
+      <!-- Booking Section: Calendar + Time Slots -->
       <div class="booking-section">
         <!-- Calendar -->
         <div class="calendar-wrapper">
@@ -1028,63 +1033,94 @@ $specialists = [
         <button class="btn-book" id="bookBtn" onclick="bookAppointment()" disabled>Book an Appointment</button>
       </div>
     </div>
-
   </div>
 
-  <!-- Scripts -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- JavaScript for Dark Mode, Calendar, and Booking Logic -->
   <script>
-    const specialists = <?= json_encode($specialists) ?>;
-    let selectedSpecialist = null;
+    // ============================================
+    // DARK MODE TOGGLE
+    // ============================================
+    const themeToggle = document.getElementById('themeToggle');
+    const themeIcon = document.getElementById('themeIcon');
+    const themeLabel = document.getElementById('themeLabel');
+
+    if (localStorage.getItem('theme') === 'dark') {
+      document.body.classList.add('dark-mode');
+      themeIcon.textContent = '🌙';
+      themeLabel.textContent = 'Dark Mode';
+    }
+
+    themeToggle.addEventListener('click', () => {
+      document.body.classList.toggle('dark-mode');
+      if (document.body.classList.contains('dark-mode')) {
+        themeIcon.textContent = '🌙';
+        themeLabel.textContent = 'Dark Mode';
+        localStorage.setItem('theme', 'dark');
+      } else {
+        themeIcon.textContent = '🌞';
+        themeLabel.textContent = 'Light Mode';
+        localStorage.setItem('theme', 'light');
+      }
+    });
+
+    // ============================================
+    // SPECIALIST DATA (From PHP)
+    // ============================================
+    const specialistsData = <?= json_encode($specialists) ?>;
+
+    let selectedSpecialistId = null;
     let selectedDate = null;
     let selectedTime = null;
-    let currentMonth = new Date().getMonth(); // Start at current month
-    let currentYear = new Date().getFullYear(); // Current year
 
-    function selectSpecialist(id) {
-      selectedSpecialist = id;
-      const specialist = specialists[id];
-      
-      // Update selected specialist info
+    let currentMonth = new Date().getMonth();
+    let currentYear = new Date().getFullYear();
+
+    // ============================================
+    // VIEW SWITCHING
+    // ============================================
+    function selectSpecialist(specialistId) {
+      selectedSpecialistId = specialistId;
+      const specialist = specialistsData[specialistId];
+
+      // Update specialist info in booking view
       document.getElementById('selectedSpecialistName').textContent = specialist.name;
       document.getElementById('selectedSpecialistRole').textContent = specialist.description;
       document.getElementById('selectedSpecialistAvatar').src = specialist.profile_pic;
-      
-      // Hide specialist view and show booking view
+
+      // Switch views
       document.getElementById('specialistView').classList.add('hidden');
       document.getElementById('bookingView').classList.add('active');
-      
-      // Generate calendar
-      generateCalendar();
-      
-      // Scroll to top
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+
+      // Render calendar
+      renderCalendar();
     }
 
     function goBackToSpecialists() {
-      // Hide booking view and show specialist view
       document.getElementById('bookingView').classList.remove('active');
       document.getElementById('specialistView').classList.remove('hidden');
       
       // Reset selections
+      selectedSpecialistId = null;
       selectedDate = null;
       selectedTime = null;
-      updateBookButton();
-      
-      // Scroll to top
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      document.getElementById('bookBtn').disabled = true;
     }
 
-    function generateCalendar() {
-      const firstDay = new Date(currentYear, currentMonth, 1).getDay();
-      const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
-      const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    // ============================================
+    // CALENDAR RENDERING
+    // ============================================
+    function renderCalendar() {
+      const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+                          'July', 'August', 'September', 'October', 'November', 'December'];
       
       document.getElementById('calendarMonth').textContent = `${monthNames[currentMonth]} ${currentYear}`;
       
+      const firstDay = new Date(currentYear, currentMonth, 1).getDay();
+      const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+      
       let calendarHTML = '';
       
-      // Empty cells for days before month starts
+      // Empty cells before the first day
       for (let i = 0; i < firstDay; i++) {
         calendarHTML += '<div class="calendar-day empty"></div>';
       }
@@ -1137,152 +1173,105 @@ $specialists = [
       
       selectedDate = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
       
-      document.querySelectorAll('.calendar-day:not(.empty):not(.disabled)').forEach(d => d.classList.remove('selected'));
+      document.querySelectorAll('.calendar-day').forEach(el => {
+        el.classList.remove('selected');
+      });
+      
       event.target.classList.add('selected');
       
-      displayTimeSlots(dayName);
-      updateBookButton();
+      renderTimeSlots(dayName);
+      document.getElementById('bookBtn').disabled = true;
+      selectedTime = null;
     }
 
-    function displayTimeSlots(dayName) {
-      const availability = specialists[selectedSpecialist].availability;
+    function renderTimeSlots(dayName) {
       const wrapper = document.getElementById('timeslotsWrapper');
-      
-      if (!availability[dayName]) {
+      const specialist = specialistsData[selectedSpecialistId];
+      const availableSlots = specialist.availability[dayName] || [];
+
+      if (availableSlots.length === 0) {
         wrapper.innerHTML = '<p style="color: var(--text-muted); text-align: center;">No available times for this day</p>';
         return;
       }
-      
-      let html = `
-        <div class="day-timeslots">
-          <div class="day-label">${dayName}</div>
-          <div class="timeslot-grid">
-      `;
-      
-      availability[dayName].forEach(time => {
-        const endTime = calculateEndTime(time);
-        html += `<button class="timeslot-btn" onclick="selectTime('${time}')">${time} - ${endTime}</button>`;
-      });
-      
-      html += `</div></div>`;
-      wrapper.innerHTML = html;
-    }
 
-    // Calculate end time (1 hour after start time)
-    function calculateEndTime(startTime) {
-      const [time, period] = startTime.split(' ');
-      let [hours, minutes] = time.split(':').map(Number);
-      
-      // Add 1 hour
-      hours += 1;
-      
-      // Handle AM/PM conversion
-      let newPeriod = period;
-      if (hours === 12 && period === 'AM') {
-        newPeriod = 'PM';
-      } else if (hours > 12) {
-        hours -= 12;
-        newPeriod = 'PM';
-      } else if (hours === 12 && period === 'PM') {
-        newPeriod = 'PM';
-      }
-      
-      // Format with leading zero if needed
-      const formattedHours = hours.toString().padStart(2, '0');
-      const formattedMinutes = minutes.toString().padStart(2, '0');
-      
-      return `${formattedHours}:${formattedMinutes} ${newPeriod}`;
+      let html = '<div class="day-timeslots">';
+      html += `<div class="day-label">${dayName}</div>`;
+      html += '<div class="timeslot-grid">';
+
+      availableSlots.forEach(time => {
+        html += `<button class="timeslot-btn" onclick="selectTime('${time}')">${time}</button>`;
+      });
+
+      html += '</div></div>';
+      wrapper.innerHTML = html;
     }
 
     function selectTime(time) {
       selectedTime = time;
-      document.querySelectorAll('.timeslot-btn').forEach(btn => btn.classList.remove('selected'));
-      event.target.classList.add('selected');
-      updateBookButton();
-    }
+      
+      document.querySelectorAll('.timeslot-btn').forEach(btn => {
+        btn.classList.remove('selected');
+        if (btn.textContent === time) {
+          btn.classList.add('selected');
+        }
+      });
 
-    function updateBookButton() {
-      const btn = document.getElementById('bookBtn');
-      
-      if (selectedSpecialist && selectedDate && selectedTime) {
-        btn.disabled = false;
-      } else {
-        btn.disabled = true;
-      }
-    }
-
-    function bookAppointment() {
-      const form = document.createElement('form');
-      form.method = 'POST';
-      form.action = 'save_appointment.php';
-      
-      const fields = {
-        user_id: <?= $_SESSION['user']['id'] ?>,
-        specialist: selectedSpecialist,
-        date: selectedDate,
-        time: selectedTime
-      };
-      
-      for (const [key, value] of Object.entries(fields)) {
-        const input = document.createElement('input');
-        input.type = 'hidden';
-        input.name = key;
-        input.value = value;
-        form.appendChild(input);
-      }
-      
-      document.body.appendChild(form);
-      form.submit();
+      document.getElementById('bookBtn').disabled = false;
     }
 
     function previousMonth() {
-      currentMonth--;
-      if (currentMonth < 0) {
+      if (currentMonth === 0) {
         currentMonth = 11;
         currentYear--;
+      } else {
+        currentMonth--;
       }
-      generateCalendar();
+      renderCalendar();
     }
 
     function nextMonth() {
-      currentMonth++;
-      if (currentMonth > 11) {
+      if (currentMonth === 11) {
         currentMonth = 0;
         currentYear++;
+      } else {
+        currentMonth++;
       }
-      generateCalendar();
+      renderCalendar();
     }
 
-    // Dark mode toggle
-    const toggleBtn = document.getElementById('themeToggle');
-    const icon = document.getElementById('themeIcon');
-    const label = document.getElementById('themeLabel');
+    // ============================================
+    // BOOK APPOINTMENT
+    // ============================================
+    function bookAppointment() {
+      if (!selectedSpecialistId || !selectedDate || !selectedTime) {
+        alert('Please select a date and time');
+        return;
+      }
 
-    // Check for saved theme preference
-    const prefersDark = localStorage.getItem('dark-mode') === 'true';
-    if (prefersDark) {
-      document.body.classList.add('dark-mode');
-      icon.textContent = '🌙';
-      label.textContent = 'Dark Mode';
+      // Create form and submit
+      const form = document.createElement('form');
+      form.method = 'POST';
+      form.action = 'confirm_appointment.php';
+
+      const inputs = {
+        specialist_id: selectedSpecialistId,
+        appointment_date: selectedDate,
+        appointment_time: selectedTime
+      };
+
+      for (const [name, value] of Object.entries(inputs)) {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = name;
+        input.value = value;
+        form.appendChild(input);
+      }
+
+      document.body.appendChild(form);
+      form.submit();
     }
-
-    // Toggle theme
-    toggleBtn.addEventListener('click', () => {
-      document.body.classList.toggle('dark-mode');
-      const isDark = document.body.classList.contains('dark-mode');
-      localStorage.setItem('dark-mode', isDark);
-      
-      // Animate icon
-      icon.style.transform = 'rotate(360deg)';
-      setTimeout(() => icon.style.transform = 'rotate(0deg)', 500);
-      
-      // Update icon and label
-      icon.textContent = isDark ? '🌙' : '🌞';
-      label.textContent = isDark ? 'Dark Mode' : 'Light Mode';
-    });
-
-    // Smooth transition for icon
-    icon.style.transition = 'transform 0.5s ease';
   </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
