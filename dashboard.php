@@ -133,6 +133,7 @@ $recommendations = [
   <title>Dashboard - MindCare</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="mobile.css" />
   <style>
     :root {
       --primary-teal: #5ad0be;
@@ -703,6 +704,7 @@ $recommendations = [
   </div>
 
   <!-- Scripts -->
+  <script src="mobile.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script>
     // Tab switching
