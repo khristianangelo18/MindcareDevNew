@@ -77,13 +77,8 @@ if (isset($_SESSION['user']))
       color: var(--toggle-text-color);
     }
 
-    .theme-toggle-btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
-    }
-
     .theme-icon {
-      font-size: 18px;
+      font-size: 1.2rem;
       transition: transform 0.5s ease;
     }
 
@@ -91,215 +86,84 @@ if (isset($_SESSION['user']))
       transform: rotate(360deg);
     }
 
-    /* Info Side Gradient - Dark Mode Support */
-    .info-side {
-      background:
-        radial-gradient(900px 500px at -10% 115%, rgba(255,255,255,.15) 0%, transparent 60%),
-        linear-gradient(135deg, var(--info-side-gradient-start) 0%, var(--info-side-gradient-mid) 48%, var(--info-side-gradient-end) 100%);
-      transition: background 0.5s ease;
-    }
-
-    /* Logo Image - FIXED SIZE */
-    .info-side .logo-img {
-      height: 200px;
-      width: auto;
-      margin: 0 0 24px 0;
-      transition: opacity 0.3s ease;
-    }
-
-    /* Login Form Side - Match Register styling */
-    .login-form-side {
-      background: var(--bg-white);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 32px;
-      transition: background-color 0.3s ease;
-    }
-
-    body.dark-mode .login-form-side {
-      background: #1a1a1a !important;
-    }
-
-    /* Login Container - Match Register.php styling */
-    .login-container {
-      background: transparent;
-      box-shadow: none;
-      border-radius: 0;
-      width: 420px;
-      max-width: 90%;
-      padding: 0;
-      text-align: left;
-    }
-
-    /* Login Container */
-    .login-container h3 {
-      color: var(--field-text);
-      transition: color 0.3s ease;
-    }
-
-    /* FIX: "Welcome Back" text must be visible in dark mode */
-    .login-container small {
-      color: var(--muted) !important;
-      transition: color 0.3s ease;
-    }
-
-    /* Input Fields - Match Register.php styling */
-    .login-container input[type="email"],
-    .login-container input[type="password"],
-    .login-container input[type="text"] {
+    /* Input field dark mode styling */
+    .login-container input {
       background-color: var(--field-bg);
-      border: none;
-      height: 52px;
-      border-radius: 999px;
-      padding: 12px 18px;
-      font-size: 15px;
       color: var(--field-text);
-      box-shadow: 0 1px 0 rgba(0,0,0,0.02), 0 8px 24px rgba(18,38,63,0.03);
-      transition: all 0.3s ease;
+      border: 1px solid var(--line);
+      transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
     }
 
-    .login-container input[type="email"]::placeholder,
-    .login-container input[type="password"]::placeholder,
-    .login-container input[type="text"]::placeholder {
+    .login-container input::placeholder {
       color: var(--muted);
       opacity: 0.7;
     }
 
-    body.dark-mode .login-container input[type="email"]::placeholder,
-    body.dark-mode .login-container input[type="password"]::placeholder,
-    body.dark-mode .login-container input[type="text"]::placeholder {
-      color: #b0b0b0 !important;
-      opacity: 0.7;
+    body.dark-mode .login-container input {
+      background-color: var(--field-bg);
+      color: var(--field-text);
+      border-color: var(--line);
     }
 
-    /* FIX: Email icon visible in BOTH light and dark mode */
-    .login-container input[type="email"] {
-      padding-left: 52px;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%2399A3AE' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='5' width='18' height='14' rx='2' ry='2'/%3E%3Cpolyline points='22,7 12,13 2,7'/%3E%3C/svg%3E");
-      background-repeat: no-repeat;
-      background-position: 18px center;
-      background-size: 18px 18px;
+    body.dark-mode .login-container input::placeholder {
+      color: var(--muted);
     }
 
-    body.dark-mode .login-container input[type="email"] {
-      background-color: #2a2a2a !important;
-      color: #f1f1f1 !important;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%23b0b0b0' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='5' width='18' height='14' rx='2' ry='2'/%3E%3Cpolyline points='22,7 12,13 2,7'/%3E%3C/svg%3E");
-      background-repeat: no-repeat;
-      background-position: 18px center;
-      background-size: 18px 18px;
+    /* Dark mode for alert messages */
+    body.dark-mode .alert-danger {
+      background-color: rgba(244, 67, 54, 0.2);
+      color: #ef5350;
+      border-color: rgba(244, 67, 54, 0.3);
     }
 
-    /* Dark mode password fields */
-    body.dark-mode .login-container input[type="password"],
-    body.dark-mode .login-container input[type="text"] {
-      background-color: #2a2a2a !important;
-      color: #f1f1f1 !important;
-    }
-
-    /* Password wrapper */
-    .password-wrapper {
-      position: relative;
-    }
-
-    .password-wrapper input[type="password"],
-    .password-wrapper input[type="text"] {
-      padding-left: 52px !important;
-      padding-right: 48px !important;
-    }
-
-    /* Password lock icon */
-    .password-wrapper::before {
-      content: "\f023";
-      font-family: "Font Awesome 6 Free";
-      font-weight: 900;
-      font-size: 16px;
-      color: #99A3AE;
-      position: absolute;
-      left: 18px;
-      top: 50%;
-      transform: translateY(-50%);
-      z-index: 1;
-      pointer-events: none;
-    }
-
-    body.dark-mode .password-wrapper::before {
-      color: #b0b0b0;
-    }
-
+    /* Toggle password icon dark mode */
     .toggle-password {
       position: absolute;
       right: 14px;
       top: 50%;
       transform: translateY(-50%);
-      color: #99A3AE;
+      color: var(--muted);
       cursor: pointer;
       z-index: 2;
       transition: color 0.3s ease;
     }
 
     body.dark-mode .toggle-password {
-      color: #b0b0b0;
+      color: var(--muted);
     }
 
-    body.dark-mode .login-container input:focus {
-      background-color: #333 !important;
-      color: #f1f1f1 !important;
-      box-shadow: 0 0 0 3px rgba(90, 208, 190, 0.25);
+    .toggle-password:hover {
+      color: var(--teal-2);
     }
 
-    /* Alert - Dark Mode */
-    .login-container .alert {
-      transition: background-color 0.3s ease, color 0.3s ease;
+    body.dark-mode .toggle-password:hover {
+      color: var(--teal-1);
     }
 
-    body.dark-mode .login-container .alert {
-      background: rgba(244, 67, 54, 0.2);
-      color: #ef5350;
-    }
-
-    /* FIX: Links must be visible in dark mode */
-    .login-container a {
-      color: #7c8a99;
-      text-decoration: none;
-      transition: color 0.3s ease;
-    }
-
-    .login-container a:hover {
-      text-decoration: underline;
-    }
-
+    /* Dark mode for links */
     body.dark-mode .login-container a {
-      color: #90caf9 !important;
+      color: #90caf9;
     }
 
     body.dark-mode .login-container a:hover {
-      color: #64b5f6 !important;
-    }
-
-    .login-container a.text-primary {
-      color: var(--teal-2) !important;
-      font-weight: 600;
+      color: #64b5f6;
     }
 
     body.dark-mode .login-container a.text-primary {
       color: var(--teal-1) !important;
     }
 
-    /* Login Button with Gradient */
+    body.dark-mode .login-container h3 {
+      color: var(--field-text);
+    }
+
+    body.dark-mode .login-container small {
+      color: var(--muted);
+    }
+
+    /* Login container button styles */
     .login-container button[type="submit"],
     .login-container .btn-primary {
-      background: linear-gradient(135deg, var(--btn-from) 0%, var(--btn-to) 100%) !important;
-      border: none !important;
-      height: 56px;
-      border-radius: 999px;
-      font-weight: 600;
-      font-size: 16px;
-      letter-spacing: .2px;
-      color: #fff !important;
-      width: 100%;
-      box-shadow: 0 10px 24px rgba(48,170,153,.35);
       transition: transform .15s ease, box-shadow .2s ease, opacity .2s ease;
     }
 
@@ -346,7 +210,7 @@ if (isset($_SESSION['user']))
           <?php if (isset($_GET['error'])): ?>
             <div class="alert alert-danger"><?= htmlspecialchars($_GET['error']) ?></div>
           <?php endif; ?>
-          <form method="POST" action="login-handler.php">
+          <form method="POST" action="login-handler.php" target="_self" id="loginForm">
             <input type="email" name="email" class="form-control mb-3" placeholder="Email" required>
             <div class="mb-3 password-wrapper">
               <input type="password" name="password" id="password" class="form-control" placeholder="Password" required>
@@ -382,6 +246,21 @@ if (isset($_SESSION['user']))
         toggleIcon.classList.remove("fa-eye-slash");
         toggleIcon.classList.add("fa-eye");
       }
+    }
+
+    // FIX: Ensure form always submits in same window/tab
+    const loginForm = document.getElementById('loginForm');
+    if (loginForm) {
+      // Explicitly set target to _self
+      loginForm.setAttribute('target', '_self');
+      
+      // Add submit event listener to ensure it stays in same tab
+      loginForm.addEventListener('submit', function(e) {
+        // Force the form to submit in the same window
+        this.target = '_self';
+        // Remove any potential target="_blank" that might be set by extensions
+        this.removeAttribute('data-target');
+      });
     }
 
     // Dark Mode Toggle

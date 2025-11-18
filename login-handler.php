@@ -17,7 +17,6 @@ if (empty($email) || empty($password)) {
 error_log("Login attempt for email: " . $email);
 
 // Get user by email using Supabase REST API with RLS bypass
-// We need to bypass RLS here because we're not authenticated yet
 $users = supabaseSelect('users', ['email' => $email], '*', null, null, true);
 
 // Debug: Log the response
@@ -50,12 +49,57 @@ $_SESSION['user'] = [
 
 error_log("Login successful for user ID: " . $user['id']);
 
-// Redirect based on role
+// Determine redirect URL based on role
+$redirectUrl = 'dashboard.php';
 if ($user['role'] === 'Admin') {
-  header("Location: admin_appointments.php");
+  $redirectUrl = 'admin_appointments.php';
 } elseif ($user['role'] === 'Specialist') {
-  header("Location: specialist_dashboard.php");
-} else {
-  header("Location: dashboard.php");
+  $redirectUrl = 'specialist_dashboard.php';
 }
-exit;
+
+// ULTIMATE FIX: Use meta refresh instead of JavaScript
+// This is more reliable and doesn't trigger popup blockers
+?>
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="refresh" content="0;url=<?php echo $redirectUrl; ?>">
+  <title>Logging in...</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      background: linear-gradient(135deg, #5ad0be 0%, #1aa592 100%);
+      color: white;
+    }
+    .loader {
+      text-align: center;
+    }
+    .spinner {
+      border: 4px solid rgba(255, 255, 255, 0.3);
+      border-top: 4px solid white;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 20px;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <div class="loader">
+    <div class="spinner"></div>
+    <p>Logging you in...</p>
+    <small>If you are not redirected, <a href="<?php echo $redirectUrl; ?>" style="color: white; text-decoration: underline;">click here</a></small>
+  </div>
+</body>
+</html>
