@@ -26,13 +26,15 @@ if ($hour >= 5 && $hour < 12) {
   $greeting = 'Good Evening';
 }
 
+
 // Get latest assessment
 $assessments = supabaseSelect(
   'assessments',
   ['user_id' => $user_id],
   '*',
   'created_at.desc',
-  1
+  1,
+  true
 );
 $assessment = !empty($assessments) ? $assessments[0] : null;
 
@@ -792,7 +794,6 @@ $recommendations = [
     <!-- Tab Navigation and Filter Row -->
     <div class="d-flex justify-content-between align-items-center mb-3">
       <div class="tab-navigation">
-        <button class="tab-btn" id="recommendationsTab">Recommendations</button>
         <button class="tab-btn active" id="appointmentsTab">Appointments</button>
         <button class="tab-btn" id="assessmentTab">Assessment History</button>
       </div>
@@ -867,19 +868,6 @@ $recommendations = [
         
       </div>
     </div>
-    <div id="recommendationsContent" style="display: none;">
-      <div class="card">
-        <h5 class="mb-3" style="color: var(--text-dark); transition: color 0.3s ease;">Based on your Assessment, you can do the following:</h5>
-        <ul class="recommendation-list">
-          <?php foreach ($recommendations as $rec): ?>
-            <li><?= htmlspecialchars($rec) ?></li>
-          <?php endforeach; ?>
-        </ul>
-        <div class="mt-4 text-center">
-          <a href="book_appointment.php" class="btn btn-primary px-4">Book a Consultation</a>
-        </div>
-      </div>
-    </div>
 
     <div id="appointmentsContent">
       <div class="card">
@@ -919,37 +907,23 @@ $recommendations = [
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script>
     // Tab switching
-    const recommendationsTab = document.getElementById('recommendationsTab');
     const appointmentsTab = document.getElementById('appointmentsTab');
     const assessmentTab = document.getElementById('assessmentTab');
-    const recommendationsContent = document.getElementById('recommendationsContent');
     const appointmentsContent = document.getElementById('appointmentsContent');
     const assessmentContent = document.getElementById('assessmentContent');
 
-    recommendationsTab.addEventListener('click', () => {
-      recommendationsTab.classList.add('active');
-      appointmentsTab.classList.remove('active');
-      assessmentTab.classList.remove('active');
-      recommendationsContent.style.display = 'block';
-      appointmentsContent.style.display = 'none';
-      assessmentContent.style.display = 'none';
-    });
 
     appointmentsTab.addEventListener('click', () => {
       appointmentsTab.classList.add('active');
-      recommendationsTab.classList.remove('active');
       assessmentTab.classList.remove('active');
-      appointmentsContent.style.display = 'block';
-      recommendationsContent.style.display = 'none';
+      appointmentsContent.style.display = 'block';;
       assessmentContent.style.display = 'none';
     });
 
     assessmentTab.addEventListener('click', () => {
       assessmentTab.classList.add('active');
       appointmentsTab.classList.remove('active');
-      recommendationsTab.classList.remove('active');
       appointmentsContent.style.display = 'none';
-      recommendationsContent.style.display = 'none';
       assessmentContent.style.display = 'block';
     })
 

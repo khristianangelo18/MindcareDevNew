@@ -36,6 +36,10 @@ if (isset($_SESSION['user']))
       --muted: #b0b0b0;
       --line: #3a3a3a;
       --bg-white: #1a1a1a;
+      --alert-danger-bg: rgba(244, 67, 54, 0.2);
+      --alert-danger-text: #ef5350;
+      --alert-success-bg: rgba(76, 175, 80, 0.2);
+      --alert-success-text: #81c784;
       --info-side-gradient-start: #0a6a74;
       --info-side-gradient-mid: #1aa592;
       --info-side-gradient-end: #2e7d32;
@@ -97,6 +101,8 @@ if (isset($_SESSION['user']))
       color: var(--muted);
       opacity: 0.7;
     }
+
+    
 
     body.dark-mode .login-container input {
       background-color: var(--field-bg);
@@ -188,6 +194,29 @@ if (isset($_SESSION['user']))
     .password-wrapper input {
       padding-right: 48px;
     }
+    .info-side img {
+      height: 200px;
+      width: auto;
+      margin: 0 0 24px 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .info-side {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: flex-start;
+      text-align: left;
+      padding: 0 72px;
+      color: #fff;
+      background:
+        radial-gradient(900px 500px at -10% 115%, rgba(255,255,255,.15) 0%, transparent 60%),
+        linear-gradient(135deg, var(--info-side-gradient-start) 0%, var(--info-side-gradient-mid) 48%, var(--info-side-gradient-end) 100%);
+      border-right: 1px solid var(--line);
+      overflow: hidden;
+      transition: background 0.5s ease;
+    }
   </style>
 </head>
 <body class="login-page">
@@ -212,9 +241,10 @@ if (isset($_SESSION['user']))
 
       <!-- Left Side: Logo + Pre-Assessment -->
       <div class="col-md-6 info-side">
-        <img src="images/MindCare.png" alt="MindCare Logo" class="img-fluid logo-img" id="logoImage" />
-        <p class="text-muted text-center fst-italic">Where healing meets understanding.</p>
-        <p>Take a Quick Pre-Assessment</p>
+        <img src="images/MindCare.png" alt="MindCare Logo" class="img-fluid" id="logoImage" />
+        
+        <p class="text-muted fst-italic">Where healing meets understanding.</p>
+        <p>Take a a Quick Pre-Assessment</p>
         <a href="pre_assessment.php" class="btn btn-outline-primary">Start Here</a>
       </div>
 

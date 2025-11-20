@@ -33,6 +33,9 @@ if (session_status() === PHP_SESSION_NONE) {
       --info-side-gradient-mid: var(--teal-2);
       --info-side-gradient-end: var(--teal-3);
       --toggle-text-color: #2b2f38;
+      --error-color: #dc3545;
+      --success-color: #28a745;
+      --warning-text: #856404;
     }
 
     body.dark-mode {
@@ -49,13 +52,16 @@ if (session_status() === PHP_SESSION_NONE) {
       --info-side-gradient-mid: #1aa592;
       --info-side-gradient-end: #2e7d32;
       --toggle-text-color: #5ad0be;
+      --error-color: #ef5350;
+      --success-color: #66bb6a;
+      --warning-text: #ffb74d;
     }
 
     body {
       font-family: 'Poppins', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
       color: var(--field-text);
       min-height: 100vh;
-      overflow: hidden;
+      overflow-x: hidden;
       background: var(--bg-white);
       transition: background-color 0.3s ease, color 0.3s ease;
     }
@@ -90,6 +96,13 @@ if (session_status() === PHP_SESSION_NONE) {
       box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
     }
 
+    #themeIcon {
+      transition: transform 0.5s ease;
+    }
+    #themeIcon.rotate {
+      transform: rotate(360deg);
+    }
+
     .theme-icon {
       font-size: 18px;
       transition: transform 0.5s ease;
@@ -110,7 +123,11 @@ if (session_status() === PHP_SESSION_NONE) {
     }
 
     .info-side {
-      position: relative;
+      position: fixed;
+      left: 0;
+      top: 0;
+      width: 50%;
+      height: 100vh;
       display: flex;
       flex-direction: column;
       justify-content: center;
@@ -196,6 +213,9 @@ if (session_status() === PHP_SESSION_NONE) {
       align-items: center;
       justify-content: center;
       padding: 32px;
+      margin-left: 50%;
+      min-height: 100vh;
+      overflow-y: auto;
       transition: background-color 0.3s ease;
     }
 
@@ -217,7 +237,6 @@ if (session_status() === PHP_SESSION_NONE) {
       transition: color 0.3s ease;
     }
     
-    /* FIX: "Please fill in your details" MUST be visible in dark mode */
     .register-container small {
       color: var(--muted) !important;
       transition: color 0.3s ease;
@@ -240,13 +259,43 @@ if (session_status() === PHP_SESSION_NONE) {
       color: var(--alert-success-text);
     }
 
+    /* Validation messages */
+    .validation-message {
+      font-size: 13px;
+      margin-top: 6px;
+      margin-bottom: 0;
+      padding-left: 4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.3s ease;
+    }
+
+    .validation-message.error {
+      color: var(--error-color);
+    }
+
+    .validation-message.success {
+      color: var(--success-color);
+    }
+
+    .validation-message i {
+      font-size: 12px;
+    }
+
+    /* Input field wrapper */
+    .input-wrapper {
+      position: relative;
+      margin-bottom: 8px;
+    }
+
     .register-container input[type="text"],
     .register-container input[type="email"],
     .register-container input[type="password"],
     .register-container input[type="number"],
     .register-container select {
       background-color: var(--field-bg);
-      border: none;
+      border: 2px solid transparent;
       height: 52px;
       border-radius: 999px;
       padding: 12px 18px;
@@ -254,6 +303,18 @@ if (session_status() === PHP_SESSION_NONE) {
       color: var(--field-text);
       box-shadow: 0 1px 0 rgba(0,0,0,0.02), 0 8px 24px rgba(18,38,63,0.03);
       transition: all 0.3s ease;
+    }
+
+    .register-container input.error,
+    .register-container select.error {
+      border-color: var(--error-color);
+      background-color: var(--field-bg);
+    }
+
+    .register-container input.success,
+    .register-container select.success {
+      border-color: var(--success-color);
+      background-color: var(--field-bg);
     }
 
     .register-container input::placeholder {
@@ -309,7 +370,6 @@ if (session_status() === PHP_SESSION_NONE) {
       color: var(--field-text);
     }
 
-    /* Age number icon */
     .register-container input[type="number"] {
       background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%2399A3AE' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2' ry='2'/%3E%3Cline x1='16' y1='2' x2='16' y2='6'/%3E%3Cline x1='8' y1='2' x2='8' y2='6'/%3E%3Cline x1='3' y1='10' x2='21' y2='10'/%3E%3C/svg%3E");
       background-repeat: no-repeat;
@@ -367,6 +427,7 @@ if (session_status() === PHP_SESSION_NONE) {
       background-color: var(--field-bg);
       box-shadow: 0 0 0 3px rgba(56,199,163,0.18);
       outline: none;
+      border-color: var(--teal-2);
     }
 
     body.dark-mode .register-container input:focus,
@@ -393,6 +454,12 @@ if (session_status() === PHP_SESSION_NONE) {
     .register-container button:hover {
       transform: translateY(-1px);
       box-shadow: 0 12px 28px rgba(48,170,153,.42);
+    }
+
+    .register-container button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
     }
 
     .register-container a {
@@ -434,17 +501,24 @@ if (session_status() === PHP_SESSION_NONE) {
     }
 
     @media (max-width: 992px) {
-      .info-side { padding: 48px 40px; }
+      .info-side { 
+        width: 50%;
+        padding: 48px 40px; 
+      }
       .info-side img { height: 160px; }
     }
     
     @media (max-width: 768px) {
       .info-side {
+        position: relative;
+        width: 100%;
         min-height: 44vh;
+        height: auto;
         border-right: none;
         padding: 40px 24px;
       }
       .register-form-side {
+        margin-left: 0;
         min-height: 56vh;
         padding: 24px;
       }
@@ -453,18 +527,26 @@ if (session_status() === PHP_SESSION_NONE) {
   </style>
 </head>
 
-<body class="register-page">
-  <button class="theme-toggle-btn" id="themeToggle">
-    <span class="theme-icon" id="themeIcon">🌞</span>
-    <span id="themeLabel">Light</span>
-  </button>
+<button class="theme-toggle-btn" id="themeToggle">
+  <svg id="themeIcon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="5"></circle>
+    <line x1="12" y1="1" x2="12" y2="3"></line>
+    <line x1="12" y1="21" x2="12" y2="23"></line>
+    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+    <line x1="1" y1="12" x2="3" y2="12"></line>
+    <line x1="21" y1="12" x2="23" y2="12"></line>
+    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+  </svg>
+  <span id="themeLabel">Light Mode</span>
+</button>
 
   <div class="container-fluid p-0">
     <div class="row g-0 min-vh-100">
 
       <div class="col-md-6 info-side">
-        <img src="images/MindCare1.png" alt="MindCare Logo" class="img-fluid" id="logoImage" />
-        <h4>Join MindCare</h4>
+        <img src="images/MindCare.png" alt="MindCare Logo" class="img-fluid" id="logoImage" />
         <p class="text-muted fst-italic">Start your mental wellness journey today.</p>
         <p>Already have an account?</p>
         <a href="login.php" class="btn btn-outline-primary">Sign In Here</a>
@@ -483,52 +565,67 @@ if (session_status() === PHP_SESSION_NONE) {
             </div>
           <?php endif; ?>
 
-          <!-- Error container for validation messages -->
-          <div id="validationError" style="display: none;"></div>
-
           <form method="POST" action="register-handler.php" id="registerForm">
             <!-- 1. Full Name -->
             <div class="mb-3">
-              <input type="text" name="fullname" class="form-control fullname-input" placeholder="Full Name" required />
+              <div class="input-wrapper">
+                <input type="text" name="fullname" id="fullname" class="form-control fullname-input" placeholder="Full Name" required />
+              </div>
+              <p class="validation-message" id="fullnameMessage"></p>
             </div>
 
             <!-- 2. Email -->
             <div class="mb-3">
-              <input type="email" name="email" id="email" class="form-control" placeholder="Email Address" required />
+              <div class="input-wrapper">
+                <input type="email" name="email" id="email" class="form-control" placeholder="Email Address" required />
+              </div>
+              <p class="validation-message" id="emailMessage"></p>
             </div>
 
             <!-- 3. Password -->
-            <div class="mb-3 password-wrapper">
-              <input type="password" name="password" id="password" class="form-control" placeholder="Password" required />
-              <span class="toggle-password" onclick="togglePassword('password', 'toggleIcon')">
-                <i id="toggleIcon" class="fa-solid fa-eye"></i>
-              </span>
+            <div class="mb-3">
+              <div class="input-wrapper password-wrapper">
+                <input type="password" name="password" id="password" class="form-control" placeholder="Password (min. 6 characters)" required />
+                <span class="toggle-password" onclick="togglePassword('password', 'toggleIcon')">
+                  <i id="toggleIcon" class="fa-solid fa-eye"></i>
+                </span>
+              </div>
+              <p class="validation-message" id="passwordMessage"></p>
             </div>
 
             <!-- 4. Confirm Password -->
-            <div class="mb-3 password-wrapper">
-              <input type="password" name="confirm_password" id="confirm_password" class="form-control" placeholder="Confirm Password" required />
-              <span class="toggle-password" onclick="togglePassword('confirm_password', 'toggleIconConfirm')">
-                <i id="toggleIconConfirm" class="fa-solid fa-eye"></i>
-              </span>
+            <div class="mb-3">
+              <div class="input-wrapper password-wrapper">
+                <input type="password" name="confirm_password" id="confirm_password" class="form-control" placeholder="Confirm Password" required />
+                <span class="toggle-password" onclick="togglePassword('confirm_password', 'toggleIconConfirm')">
+                  <i id="toggleIconConfirm" class="fa-solid fa-eye"></i>
+                </span>
+              </div>
+              <p class="validation-message" id="confirmPasswordMessage"></p>
             </div>
 
             <!-- 5. Gender -->
             <div class="mb-3">
-              <select name="gender" class="form-select" required>
-                <option value="" disabled selected>Select Gender</option>
-                <option value="Male">Male</option>
-                <option value="Female">Female</option>
-                <option value="Other">Other</option>
-              </select>
+              <div class="input-wrapper">
+                <select name="gender" id="gender" class="form-select" required>
+                  <option value="" disabled selected>Select Gender</option>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+              <p class="validation-message" id="genderMessage"></p>
             </div>
 
             <!-- 6. Age -->
             <div class="mb-3">
-              <input type="number" name="age" class="form-control" placeholder="Age" min="1" max="120" required />
+              <div class="input-wrapper">
+                <input type="number" name="age" id="age" class="form-control" placeholder="Age" min="1" max="120" required />
+              </div>
+              <p class="validation-message" id="ageMessage"></p>
             </div>
 
-            <button type="submit" class="btn btn-primary w-100">Create Account</button>
+            <button type="submit" class="btn btn-primary w-100" id="submitBtn">Create Account</button>
           </form>
 
           <div class="mt-3 text-center">
@@ -542,6 +639,9 @@ if (session_status() === PHP_SESSION_NONE) {
   </div>
 
   <script>
+    const sunIcon = '<circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>';
+    const moonIcon = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>';
+    
     function togglePassword(fieldId, iconId) {
       const passwordField = document.getElementById(fieldId);
       const toggleIcon = document.getElementById(iconId);
@@ -556,59 +656,127 @@ if (session_status() === PHP_SESSION_NONE) {
       }
     }
 
-    // Form validation
+    // Form elements
     const form = document.getElementById('registerForm');
+    const fullnameInput = document.getElementById('fullname');
     const emailInput = document.getElementById('email');
     const passwordInput = document.getElementById('password');
     const confirmPasswordInput = document.getElementById('confirm_password');
-    const errorContainer = document.getElementById('validationError');
+    const genderInput = document.getElementById('gender');
+    const ageInput = document.getElementById('age');
+    const submitBtn = document.getElementById('submitBtn');
 
-    function showError(message) {
-      errorContainer.className = 'alert alert-danger';
-      errorContainer.textContent = message;
-      errorContainer.style.display = 'block';
-      errorContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
+    // Message elements
+    const fullnameMessage = document.getElementById('fullnameMessage');
+    const emailMessage = document.getElementById('emailMessage');
+    const passwordMessage = document.getElementById('passwordMessage');
+    const confirmPasswordMessage = document.getElementById('confirmPasswordMessage');
+    const genderMessage = document.getElementById('genderMessage');
+    const ageMessage = document.getElementById('ageMessage');
 
-    function hideError() {
-      errorContainer.style.display = 'none';
-    }
-
-    form.addEventListener('submit', function(e) {
-      hideError();
-
-      // Validate email format
-      const email = emailInput.value.trim();
-      if (!email.endsWith('@example.com')) {
-        e.preventDefault();
-        showError('Invalid email format. Email must end with @example.com');
-        emailInput.focus();
-        return false;
+    // Validation functions
+    function showValidation(input, message, text, isError) {
+      if (isError) {
+        input.classList.remove('success');
+        input.classList.add('error');
+        message.classList.remove('success');
+        message.classList.add('error');
+        message.innerHTML = `<i class="fa-solid fa-circle-exclamation"></i> ${text}`;
+      } else {
+        input.classList.remove('error');
+        input.classList.add('success');
+        message.classList.remove('error');
+        message.classList.add('success');
+        message.innerHTML = `<i class="fa-solid fa-circle-check"></i> ${text}`;
       }
+    }
 
-      // Validate password match
-      const password = passwordInput.value;
-      const confirmPassword = confirmPasswordInput.value;
-      if (password !== confirmPassword) {
-        e.preventDefault();
-        showError('Passwords do not match. Please ensure both password fields are identical.');
-        confirmPasswordInput.focus();
-        return false;
+    function clearValidation(input, message) {
+      input.classList.remove('error', 'success');
+      message.classList.remove('error', 'success');
+      message.innerHTML = '';
+    }
+
+    // Full name validation
+    fullnameInput.addEventListener('blur', function() {
+      const value = this.value.trim();
+      if (value === '') {
+        showValidation(this, fullnameMessage, 'Full name is required', true);
+      } else if (value.length < 2) {
+        showValidation(this, fullnameMessage, 'Name must be at least 2 characters', true);
+      } else {
+        showValidation(this, fullnameMessage, 'Looks good!', false);
       }
     });
 
-    // Real-time validation feedback
+    fullnameInput.addEventListener('input', function() {
+      if (this.classList.contains('error') || this.classList.contains('success')) {
+        fullnameInput.dispatchEvent(new Event('blur'));
+      }
+    });
+
+    // Email validation
+    function validateEmail(email) {
+      return email.endsWith('@example.com');
+    }
+
     emailInput.addEventListener('blur', function() {
       const email = this.value.trim();
-      if (email && !email.endsWith('@example.com')) {
-        this.style.border = '2px solid #dc3545';
+      if (email === '') {
+        showValidation(this, emailMessage, 'Email is required', true);
+      } else if (!email.includes('@')) {
+        showValidation(this, emailMessage, 'Please enter a valid email address', true);
+      } else if (!validateEmail(email)) {
+        showValidation(this, emailMessage, 'Email must end with @example.com', true);
       } else {
-        this.style.border = '';
+        showValidation(this, emailMessage, 'Valid email format', false);
       }
     });
 
-    emailInput.addEventListener('focus', function() {
-      hideError();
+    emailInput.addEventListener('input', function() {
+      if (this.classList.contains('error') || this.classList.contains('success')) {
+        emailInput.dispatchEvent(new Event('blur'));
+      }
+    });
+
+    // Password validation
+    passwordInput.addEventListener('blur', function() {
+      const value = this.value;
+      if (value === '') {
+        showValidation(this, passwordMessage, 'Password is required', true);
+      } else if (value.length < 6) {
+        showValidation(this, passwordMessage, 'Password must be at least 6 characters', true);
+      } else {
+        showValidation(this, passwordMessage, 'Strong password', false);
+        // Re-validate confirm password if it has value
+        if (confirmPasswordInput.value) {
+          confirmPasswordInput.dispatchEvent(new Event('blur'));
+        }
+      }
+    });
+
+    passwordInput.addEventListener('input', function() {
+      if (this.classList.contains('error') || this.classList.contains('success')) {
+        passwordInput.dispatchEvent(new Event('blur'));
+      }
+      // Real-time check for confirm password
+      if (confirmPasswordInput.value) {
+        confirmPasswordInput.dispatchEvent(new Event('input'));
+      }
+    });
+
+    // Confirm password validation
+    confirmPasswordInput.addEventListener('blur', function() {
+      const password = passwordInput.value;
+      const confirmPassword = this.value;
+      
+      if (confirmPassword === '') {
+        showValidation(this, confirmPasswordMessage, 'Please confirm your password', true);
+      } else if (password !== confirmPassword) {
+        showValidation(this, confirmPasswordMessage, 'Passwords do not match', true);
+      } else {
+        showValidation(this, confirmPasswordMessage, 'Passwords match', false);
+      }
     });
 
     confirmPasswordInput.addEventListener('input', function() {
@@ -616,16 +784,95 @@ if (session_status() === PHP_SESSION_NONE) {
       const confirmPassword = this.value;
       
       if (confirmPassword && password !== confirmPassword) {
-        this.style.border = '2px solid #dc3545';
-      } else {
-        this.style.border = '';
+        showValidation(this, confirmPasswordMessage, 'Passwords do not match', true);
+      } else if (confirmPassword && password === confirmPassword) {
+        showValidation(this, confirmPasswordMessage, 'Passwords match', false);
+      } else if (confirmPassword === '') {
+        clearValidation(this, confirmPasswordMessage);
       }
     });
 
-    confirmPasswordInput.addEventListener('focus', function() {
-      hideError();
+    // Gender validation
+    genderInput.addEventListener('change', function() {
+      if (this.value) {
+        showValidation(this, genderMessage, 'Gender selected', false);
+      }
     });
 
+    // Age validation
+    ageInput.addEventListener('blur', function() {
+      const value = parseInt(this.value);
+      if (isNaN(value) || this.value === '') {
+        showValidation(this, ageMessage, 'Age is required', true);
+      } else if (value < 1 || value > 120) {
+        showValidation(this, ageMessage, 'Please enter a valid age (1-120)', true);
+      } else if (value < 13) {
+        showValidation(this, ageMessage, 'You must be at least 13 years old', true);
+      } else {
+        showValidation(this, ageMessage, 'Valid age', false);
+      }
+    });
+
+    ageInput.addEventListener('input', function() {
+      if (this.classList.contains('error') || this.classList.contains('success')) {
+        ageInput.dispatchEvent(new Event('blur'));
+      }
+    });
+
+    // Form submission validation
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      let isValid = true;
+
+      // Validate all fields
+      if (fullnameInput.value.trim() === '' || fullnameInput.value.trim().length < 2) {
+        showValidation(fullnameInput, fullnameMessage, 'Please enter a valid full name', true);
+        isValid = false;
+      }
+
+      const email = emailInput.value.trim();
+      if (email === '' || !validateEmail(email)) {
+        showValidation(emailInput, emailMessage, 'Email must end with @example.com', true);
+        isValid = false;
+      }
+
+      if (passwordInput.value.length < 6) {
+        showValidation(passwordInput, passwordMessage, 'Password must be at least 6 characters', true);
+        isValid = false;
+      }
+
+      if (passwordInput.value !== confirmPasswordInput.value) {
+        showValidation(confirmPasswordInput, confirmPasswordMessage, 'Passwords do not match', true);
+        isValid = false;
+      }
+
+      if (genderInput.value === '') {
+        showValidation(genderInput, genderMessage, 'Please select a gender', true);
+        isValid = false;
+      }
+
+      const age = parseInt(ageInput.value);
+      if (isNaN(age) || age < 13 || age > 120) {
+        showValidation(ageInput, ageMessage, 'Please enter a valid age', true);
+        isValid = false;
+      }
+
+      if (isValid) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Creating Account...';
+        form.submit();
+      } else {
+        // Scroll to first error
+        const firstError = document.querySelector('.error');
+        if (firstError) {
+          firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          firstError.focus();
+        }
+      }
+    });
+
+    // Theme toggle
     const themeToggle = document.getElementById('themeToggle');
     const themeIcon = document.getElementById('themeIcon');
     const themeLabel = document.getElementById('themeLabel');
@@ -638,8 +885,8 @@ if (session_status() === PHP_SESSION_NONE) {
     const prefersDark = localStorage.getItem('dark-mode') === 'true';
     if (prefersDark) {
       document.body.classList.add('dark-mode');
-      themeIcon.textContent = '🌙';
-      themeLabel.textContent = 'Dark';
+      themeIcon.innerHTML = moonIcon;
+      themeLabel.textContent = 'Dark Mode';
       updateLogo(true);
     }
 
@@ -651,8 +898,8 @@ if (session_status() === PHP_SESSION_NONE) {
       themeIcon.classList.add('rotate');
       setTimeout(() => themeIcon.classList.remove('rotate'), 500);
       
-      themeIcon.textContent = isDark ? '🌙' : '🌞';
-      themeLabel.textContent = isDark ? 'Dark' : 'Light';
+      themeIcon.innerHTML = isDark ? moonIcon : sunIcon;
+      themeLabel.textContent = isDark ? 'Dark Mode' : 'Light Mode';
       updateLogo(isDark);
     });
   </script>
