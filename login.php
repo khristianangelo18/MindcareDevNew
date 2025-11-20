@@ -12,6 +12,8 @@ if (isset($_SESSION['user']))
   <link rel="stylesheet" href="style.css" />
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+
     /* Dark Mode Variables */
     :root {
       --teal-1: #5ad0be;
@@ -47,11 +49,22 @@ if (isset($_SESSION['user']))
     }
 
     body {
+      font-family: 'Poppins', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color: var(--field-text);
+      min-height: 100vh;
+      overflow: hidden;
+      background: var(--bg-white);
       transition: background-color 0.3s ease, color 0.3s ease;
     }
 
-    body.dark-mode {
-      background: #1a1a1a !important;
+    .login-page {
+      min-height: 100vh;
+      overflow: hidden;
+      background: var(--bg-white);
+    }
+
+    .login-page .row {
+      min-height: 100vh;
     }
 
     /* Dark Mode Toggle Button */
@@ -81,6 +94,11 @@ if (isset($_SESSION['user']))
       color: var(--toggle-text-color);
     }
 
+    .theme-toggle-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+    }
+
     #themeIcon {
       transition: transform 0.5s ease;
     }
@@ -96,13 +114,10 @@ if (isset($_SESSION['user']))
       transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
     }
 
-
     .login-container input::placeholder {
       color: var(--muted);
       opacity: 0.7;
     }
-
-    
 
     body.dark-mode .login-container input {
       background-color: var(--field-bg);
@@ -111,11 +126,11 @@ if (isset($_SESSION['user']))
     }
 
     /* Dark mode email icon - use lighter color */
-      body.dark-mode .login-container input[type="email"]{
-        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%23b0b0b0' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='5' width='18' height='14' rx='2' ry='2'/%3E%3Cpolyline points='22,7 12,13 2,7'/%3E%3C/svg%3E");
-        background-repeat: no-repeat;
-        background-position: 18px 50%;
-      }
+    body.dark-mode .login-container input[type="email"]{
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%23b0b0b0' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='5' width='18' height='14' rx='2' ry='2'/%3E%3Cpolyline points='22,7 12,13 2,7'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: 18px 50%;
+    }
 
     body.dark-mode .login-container input::placeholder {
       color: var(--muted);
@@ -194,12 +209,6 @@ if (isset($_SESSION['user']))
     .password-wrapper input {
       padding-right: 48px;
     }
-    .info-side img {
-      height: 200px;
-      width: auto;
-      margin: 0 0 24px 0;
-      transition: opacity 0.3s ease;
-    }
 
     .info-side {
       position: relative;
@@ -217,24 +226,188 @@ if (isset($_SESSION['user']))
       overflow: hidden;
       transition: background 0.5s ease;
     }
+
+    .info-side::before,
+    .info-side::after {
+      content: '';
+      position: absolute;
+      bottom: -180px;
+      left: -180px;
+      border-radius: 50%;
+      border: 1px solid rgba(255,255,255,.25);
+      pointer-events: none;
+    }
+    
+    .info-side::before {
+      width: 520px; 
+      height: 520px;
+    }
+    
+    .info-side::after {
+      width: 700px; 
+      height: 700px;
+      border-color: rgba(255,255,255,.15);
+    }
+
+    .info-side img {
+      height: 200px;
+      width: auto;
+      margin: 0 0 24px 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .info-side h4 {
+      font-size: 40px;
+      line-height: 1.1;
+      font-weight: 700;
+      margin: 8px 0 10px;
+      color: #fff;
+    }
+
+    .info-side p {
+      font-size: 16px;
+      color: rgba(255,255,255,.9);
+      margin-bottom: 18px;
+    }
+
+    .info-side .text-muted {
+      color: rgba(255,255,255,.85) !important;
+      font-weight: 500;
+    }
+
+    .info-side a.btn-outline-primary {
+      background: rgba(255,255,255,.20);
+      color: #fff;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 999px;
+      font-weight: 600;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.25);
+      transition: transform .15s ease, background .2s ease;
+    }
+
+    .info-side a.btn-outline-primary:hover {
+      background: rgba(255,255,255,.28);
+      transform: translateY(-1px);
+    }
+
+    .login-form-side {
+      background: var(--bg-white);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 32px;
+      transition: background-color 0.3s ease;
+    }
+
+    .login-container {
+      background: transparent;
+      box-shadow: none;
+      border-radius: 0;
+      width: 420px;
+      max-width: 90%;
+      padding: 0;
+      text-align: left;
+    }
+
+    .login-container h3 {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--field-text);
+      margin-bottom: 6px;
+      transition: color 0.3s ease;
+    }
+
+    .login-container small {
+      color: var(--muted) !important;
+      transition: color 0.3s ease;
+    }
+
+    .login-container .alert {
+      border: none;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    .login-container .alert-danger {
+      background: var(--alert-danger-bg);
+      color: var(--alert-danger-text);
+    }
+
+    .login-container .form-control {
+      background-color: var(--field-bg);
+      color: var(--field-text);
+      border: 2px solid transparent;
+      height: 52px;
+      border-radius: 999px;
+      padding: 12px 18px;
+      font-size: 15px;
+      box-shadow: 0 1px 0 rgba(0,0,0,0.02), 0 8px 24px rgba(18,38,63,0.03);
+      transition: all 0.3s ease;
+    }
+
+    .login-container .form-control:focus {
+      background-color: var(--field-bg);
+      color: var(--field-text);
+      border-color: var(--teal-2);
+      box-shadow: 0 0 0 3px rgba(90, 208, 190, 0.15);
+      outline: none;
+    }
+
+    body.dark-mode .login-container .form-control:focus {
+      background-color: #333;
+      box-shadow: 0 0 0 3px rgba(90, 208, 190, 0.25);
+    }
+
+    .login-container .btn-primary {
+      background: linear-gradient(135deg, var(--btn-from) 0%, var(--btn-to) 100%);
+      border: none;
+      height: 56px;
+      border-radius: 999px;
+      padding: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      letter-spacing: .2px;
+      color: #fff;
+      box-shadow: 0 10px 24px rgba(48,170,153,.35);
+      transition: transform .15s ease, box-shadow .2s ease;
+    }
+
+    .login-container .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 12px 28px rgba(48,170,153,.42);
+    }
+
+    .login-container a {
+      color: var(--teal-2);
+      text-decoration: none;
+      font-size: 14px;
+      transition: color 0.2s ease;
+    }
+
+    .login-container a:hover {
+      color: var(--teal-1);
+      text-decoration: underline;
+    }
   </style>
 </head>
-<body class="login-page">
+<body class="login-page" id="loginBody">
   <!-- Dark Mode Toggle -->
   <button class="theme-toggle-btn" id="themeToggle">
-  <svg id="themeIcon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-    <circle cx="12" cy="12" r="5"></circle>
-    <line x1="12" y1="1" x2="12" y2="3"></line>
-    <line x1="12" y1="21" x2="12" y2="23"></line>
-    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-    <line x1="1" y1="12" x2="3" y2="12"></line>
-    <line x1="21" y1="12" x2="23" y2="12"></line>
-    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-  </svg>
-  <span id="themeLabel">Light Mode</span>
-</button>
+    <svg id="themeIcon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+    <span id="themeLabel">Light Mode</span>
+  </button>
 
   <div class="container-fluid p-0">
     <div class="row g-0 min-vh-100">
@@ -244,7 +417,7 @@ if (isset($_SESSION['user']))
         <img src="images/MindCare.png" alt="MindCare Logo" class="img-fluid" id="logoImage" />
         
         <p class="text-muted fst-italic">Where healing meets understanding.</p>
-        <p>Take a a Quick Pre-Assessment</p>
+        <p>Take a Quick Pre-Assessment</p>
         <a href="pre_assessment.php" class="btn btn-outline-primary">Start Here</a>
       </div>
 
@@ -344,6 +517,7 @@ if (isset($_SESSION['user']))
     const themeIcon = document.getElementById('themeIcon');
     const themeLabel = document.getElementById('themeLabel');
     const logoImage = document.getElementById('logoImage');
+    const loginBody = document.getElementById('loginBody');
 
     // Function to update logo based on theme
     function updateLogo(isDark) {
@@ -357,7 +531,7 @@ if (isset($_SESSION['user']))
     // Check for saved theme preference
     const prefersDark = localStorage.getItem('dark-mode') === 'true';
     if (prefersDark) {
-      document.body.classList.add('dark-mode');
+      loginBody.classList.add('dark-mode');
       themeIcon.innerHTML = moonIcon;
       themeLabel.textContent = 'Dark Mode';
       updateLogo(true);
@@ -365,8 +539,8 @@ if (isset($_SESSION['user']))
 
     // Toggle theme
     themeToggle.addEventListener('click', () => {
-      document.body.classList.toggle('dark-mode');
-      const isDark = document.body.classList.contains('dark-mode');
+      loginBody.classList.toggle('dark-mode');
+      const isDark = loginBody.classList.contains('dark-mode');
       localStorage.setItem('dark-mode', isDark);
       
       // Animate icon

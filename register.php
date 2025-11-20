@@ -717,17 +717,16 @@ if (session_status() === PHP_SESSION_NONE) {
 
     // Email validation
     function validateEmail(email) {
-      return email.endsWith('@example.com');
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      return emailRegex.test(email);
     }
 
     emailInput.addEventListener('blur', function() {
       const email = this.value.trim();
       if (email === '') {
         showValidation(this, emailMessage, 'Email is required', true);
-      } else if (!email.includes('@')) {
-        showValidation(this, emailMessage, 'Please enter a valid email address', true);
       } else if (!validateEmail(email)) {
-        showValidation(this, emailMessage, 'Email must end with @example.com', true);
+        showValidation(this, emailMessage, 'Please enter a valid email address', true);
       } else {
         showValidation(this, emailMessage, 'Valid email format', false);
       }
@@ -833,7 +832,7 @@ if (session_status() === PHP_SESSION_NONE) {
 
       const email = emailInput.value.trim();
       if (email === '' || !validateEmail(email)) {
-        showValidation(emailInput, emailMessage, 'Email must end with @example.com', true);
+        showValidation(emailInput, emailMessage, 'Please enter a valid email address', true);
         isValid = false;
       }
 
