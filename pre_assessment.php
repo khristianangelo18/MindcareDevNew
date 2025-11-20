@@ -145,6 +145,7 @@ if ($assessment_result) {
       --text-dark: #2b2f38;
       --text-muted: #7a828e;
       --bg-light: #f8f9fa;
+      --sidebar-bg: #f5f6f7; 
       --card-bg: #ffffff;
       --border-color: #e9edf5;
     }
@@ -154,79 +155,112 @@ if ($assessment_result) {
       background-color: var(--bg-light);
       color: var(--text-dark);
       min-height: 100vh;
+      overflow-x: hidden;
       transition: background-color 0.3s ease, color 0.3s ease;
+    }
+    
+    /* Global Content Shift for Sidebar */
+    .main-wrapper {
+      margin-left: 250px; 
+      padding-top: 2rem;
+      padding-bottom: 2rem;
+      min-height: 100vh;
+      transition: margin-left 0.3s ease;
     }
 
     /* Dark Mode Variables */
     body.dark-mode {
       --bg-light: #1a1a1a;
+      --sidebar-bg: #2a2a2a;
       --card-bg: #2d2d2d;
       --text-dark: #f1f1f1;
       --text-muted: #b0b0b0;
       --border-color: #3a3a3a;
     }
 
-    /* Top Navigation Bar */
-    .top-nav {
+    /* --- SIDEBAR STYLING (COPIED FROM DASHBOARD) --- */
+    .sidebar {
       position: fixed;
-      top: 0;
       left: 0;
-      right: 0;
-      height: 70px;
-      background: var(--card-bg);
-      border-bottom: 1px solid var(--border-color);
-      padding: 0 2rem;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+      top: 0;
+      width: 250px;
+      height: 100vh;
+      background: var(--sidebar-bg);
+      border-right: 1px solid var(--border-color);
+      padding: 1.5rem;
       z-index: 1000;
+      display: flex;
+      flex-direction: column;
       transition: background-color 0.3s ease, border-color 0.3s ease;
     }
 
-    .logo-container {
+    .sidebar .logo-wrapper {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .sidebar .logo-img {
+      max-width: 125px;
+    }
+
+    .sidebar .nav-link {
+      color: var(--text-dark);
+      padding: 0.65rem 1rem;
+      border-radius: 8px;
+      margin-bottom: 0.5rem;
       display: flex;
       align-items: center;
-      gap: 1rem;
+      gap: 0.5rem;
+      font-weight: 500;
+      font-size: 0.625rem;
+      text-decoration: none;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      transition: all 0.3s ease;
     }
 
-    .logo-container img {
-      height: 40px;
-      width: auto;
+    .sidebar .nav-link:hover {
+      background-color: rgba(90, 208, 190, 0.1);
+      color: #5ad0be;
     }
 
-    .logo-text {
-      font-size: 1.25rem;
-      font-weight: 700;
-      color: var(--primary-teal);
+    .sidebar .nav-link.active {
+      background-color: #5ad0be;
+      color: #ffffff;
     }
 
-    .theme-toggle-btn {
-      padding: 0.5rem 1rem;
+    /* Dark Mode Toggle Button */
+    .theme-toggle {
+      margin-top: auto;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border-color);
+    }
+
+    .theme-toggle button {
+      width: 100%;
+      padding: 0.65rem 1rem;
       background: transparent;
       border: 1px solid var(--border-color);
       border-radius: 8px;
       color: var(--text-dark);
-      font-size: 0.875rem;
+      font-size: 0.625rem;
       font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
       cursor: pointer;
       display: flex;
       align-items: center;
+      justify-content: center;
       gap: 0.5rem;
       transition: all 0.3s ease;
     }
 
-    .theme-toggle-btn:hover {
+    .theme-toggle button:hover {
       background-color: rgba(90, 208, 190, 0.1);
       border-color: var(--primary-teal);
       color: var(--primary-teal);
     }
-
-    /* Main Content */
-    .main-wrapper {
-      padding-top: 90px;
-      padding-bottom: 2rem;
-      min-height: 100vh;
-    }
+    /* --- END SIDEBAR STYLING --- */
 
     .content-container {
       max-width: 900px;
@@ -495,12 +529,14 @@ if ($assessment_result) {
 
     /* Responsive */
     @media (max-width: 768px) {
-      .top-nav {
-        padding: 0 1rem;
+      /* Reset sidebar shift */
+      .main-wrapper {
+        margin-left: 0;
+        padding-top: 1.5rem; /* Adjust padding for mobile view without sidebar */
       }
-
-      .logo-text {
-        display: none;
+      
+      .sidebar {
+        display: none; /* Hide sidebar completely on mobile */
       }
 
       .content-container {
@@ -532,36 +568,75 @@ if ($assessment_result) {
   </style>
 </head>
 <body>
-  <!-- Top Navigation -->
-  <div class="top-nav">
-    <div class="logo-container">
-      <img src="images/Mindcare.png" alt="MindCare Logo" />
-      <span class="logo-text">MindCare</span>
+    
+  <div class="sidebar">
+    <div class="logo-wrapper">
+      <img src="images/Mindcare.png" alt="MindCare Logo" class="logo-img" />
     </div>
-    <button class="theme-toggle-btn" id="themeToggle" onclick="toggleTheme()">
-      <svg id="themeIcon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="12" cy="12" r="5"></circle>
-        <line x1="12" y1="1" x2="12" y2="3"></line>
-        <line x1="12" y1="21" x2="12" y2="23"></line>
-        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-        <line x1="1" y1="12" x2="3" y2="12"></line>
-        <line x1="21" y1="12" x2="23" y2="12"></line>
-        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-      </svg>
-      <span id="themeLabel">Light Mode</span>
-    </button>
-  </div>
 
-  <!-- Main Content -->
+    <nav class="nav flex-column" style="flex: 1;">
+      
+      <a class="nav-link active" href="pre_assessment.php">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="16" y1="13" x2="8" y2="13"></line>
+        </svg>
+        PRE ASSESSMENT
+      </a>
+      
+      <a class="nav-link" href="login.php">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
+          <polyline points="10 17 15 12 10 7"></polyline>
+          <line x1="15" y1="12" x2="3" y2="12"></line>
+        </svg>
+        LOGIN
+      </a>
+      
+      <a class="nav-link" href="register.php">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+          <circle cx="8.5" cy="7" r="4"></circle>
+          <path d="M20 8v7"></path>
+          <path d="M23 11h-6"></path>
+        </svg>
+        REGISTER
+      </a>
+      
+      <a class="nav-link" href="faq.php">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+          <line x1="12" y1="17" x2="12.01" y2="17"></line>
+        </svg>
+        FAQ
+      </a>
+      
+    </nav>
+
+    <div class="theme-toggle">
+      <button id="themeToggle">
+        <svg id="themeIcon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="5"></circle>
+          <line x1="12" y1="1" x2="12" y2="3"></line>
+          <line x1="12" y1="21" x2="12" y2="23"></line>
+          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+          <line x1="1" y1="12" x2="3" y2="12"></line>
+          <line x1="21" y1="12" x2="23" y2="12"></line>
+          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+        </svg>
+        <span id="themeLabel">Light Mode</span>
+      </button>
+    </div>
+  </div>
   <div class="main-wrapper">
     <div class="content-container">
       
       <?php if ($assessment_result): ?>
-        <!-- Results Display -->
         <div class="results-section">
-          <!-- Result Header Card -->
           <div class="result-header">
             <h2>
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 0.5rem;">
@@ -580,7 +655,6 @@ if ($assessment_result) {
             </span>
           </div>
 
-          <!-- Alert Message -->
           <div class="alert-message">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; margin-top: 0.125rem;">
               <circle cx="12" cy="12" r="10"></circle>
@@ -592,7 +666,6 @@ if ($assessment_result) {
             </div>
           </div>
 
-          <!-- Recommendations Card -->
           <div class="recommendations-card">
             <h3>
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -613,7 +686,6 @@ if ($assessment_result) {
             </ul>
           </div>
 
-          <!-- Action Buttons -->
           <div class="action-buttons">
             <?php if ($recommendation_data['severity'] === 'moderate' || $recommendation_data['severity'] === 'severe'): ?>
               <a href="register.php" class="btn-primary-custom">
@@ -644,7 +716,6 @@ if ($assessment_result) {
             </a>
           </div>
 
-          <!-- Info Note -->
           <div class="info-note">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;">
               <circle cx="12" cy="12" r="10"></circle>
@@ -661,7 +732,6 @@ if ($assessment_result) {
         </div>
 
       <?php else: ?>
-        <!-- Assessment Form -->
         <div class="page-header">
           <h1>
             <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 0.5rem; color: var(--primary-teal);">
@@ -728,7 +798,6 @@ if ($assessment_result) {
             </div>
           </form>
 
-          <!-- Info Note for Form -->
           <div class="info-note">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;">
               <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
@@ -744,45 +813,42 @@ if ($assessment_result) {
   </div>
 
   <script>
-    // Dark Mode Toggle
-    function toggleTheme() {
-      const body = document.body;
-      const themeIcon = document.getElementById('themeIcon');
-      const themeLabel = document.getElementById('themeLabel');
-      
-      body.classList.toggle('dark-mode');
-      
-      if (body.classList.contains('dark-mode')) {
-        localStorage.setItem('theme', 'dark');
-        themeLabel.textContent = 'Dark Mode';
-        themeIcon.innerHTML = `
-          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-        `;
-      } else {
-        localStorage.setItem('theme', 'light');
-        themeLabel.textContent = 'Light Mode';
-        themeIcon.innerHTML = `
-          <circle cx="12" cy="12" r="5"></circle>
-          <line x1="12" y1="1" x2="12" y2="3"></line>
-          <line x1="12" y1="21" x2="12" y2="23"></line>
-          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-          <line x1="1" y1="12" x2="3" y2="12"></line>
-          <line x1="21" y1="12" x2="23" y2="12"></line>
-          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-        `;
-      }
+    // Dark Mode Icons
+    const sunIcon = '<circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>';
+    const moonIcon = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>';
+
+    // Dark Mode Toggle Functionality
+    const toggleBtn = document.getElementById('themeToggle');
+    const themeIcon = document.getElementById('themeIcon');
+    const themeLabel = document.getElementById('themeLabel');
+
+    function updateThemeVisuals(isDark) {
+        themeLabel.textContent = isDark ? 'Dark Mode' : 'Light Mode';
+        themeIcon.innerHTML = isDark ? moonIcon : sunIcon;
     }
 
-    // Load saved theme
-    if (localStorage.getItem('theme') === 'dark') {
-      document.body.classList.add('dark-mode');
-      document.getElementById('themeLabel').textContent = 'Dark Mode';
-      document.getElementById('themeIcon').innerHTML = `
-        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-      `;
+    function loadTheme() {
+        const prefersDark = localStorage.getItem('dark-mode') === 'true';
+        if (prefersDark) {
+            document.body.classList.add('dark-mode');
+        }
+        updateThemeVisuals(prefersDark);
     }
+    
+    toggleBtn.addEventListener('click', () => {
+        document.body.classList.toggle('dark-mode');
+        const isDark = document.body.classList.contains('dark-mode');
+        localStorage.setItem('dark-mode', isDark);
+        
+        themeIcon.style.transform = 'rotate(360deg)';
+        setTimeout(() => themeIcon.style.transform = 'rotate(0deg)', 500);
+        
+        updateThemeVisuals(isDark);
+    });
+
+    // Initial load for non-DOM content
+    document.addEventListener('DOMContentLoaded', loadTheme);
+    themeIcon.style.transition = 'transform 0.5s ease';
   </script>
 </body>
 </html>

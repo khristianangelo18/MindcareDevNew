@@ -1,7 +1,9 @@
 <?php
 session_start();
-include 'supabase.php';
-$user_name = $_SESSION['user']['fullname'] ?? 'User';  
+// Determine if the user is logged in
+$is_logged_in = isset($_SESSION['user']);
+// Get user name if logged in, otherwise default to 'Guest'
+$user_name = $is_logged_in ? ($_SESSION['user']['fullname'] ?? 'User') : 'Guest';  
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -36,11 +38,11 @@ $user_name = $_SESSION['user']['fullname'] ?? 'User';
       transition: background-color 0.3s ease, color 0.3s ease;
     }
 
-    /* Dark Mode Variables - these colors are used when dark mode is active */
+    /* Dark Mode Variables */
     body.dark-mode {
       --bg-light: #1a1a1a;
       --sidebar-bg: #2a2a2a;
-      --card-bg: #2a2a2a;
+      --card-bg: #2d2d2d;
       --text-dark: #f1f1f1;
       --text-muted: #b0b0b0;
       --border-color: #3a3a3a;
@@ -320,88 +322,113 @@ $user_name = $_SESSION['user']['fullname'] ?? 'User';
 </head>
 <body>
 
-  <!-- Sidebar -->
   <div class="sidebar">
     <div class="logo-wrapper">
       <img src="images/Mindcare.png" alt="MindCare Logo" class="logo-img" />
     </div>
 
     <nav class="nav flex-column" style="flex: 1;">
-      <a class="nav-link" href="dashboard.php">
-        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
-        DASHBOARD
-      </a>
-      <a class="nav-link" href="resources.php">
-      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18"
-          viewBox="0 0 24 24" fill="none" stroke="currentColor"
-          stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/>
-      </svg>        RESOURCES
-      </a>
-      <a class="nav-link" href="assessment.php">
-        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-        ASSESSMENT
-      </a>
-      <a class="nav-link" href="book_appointment.php">
-        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-        BOOK APPOINTMENT
-      </a>
-      <a class="nav-link" href="appointments.php">
-        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
-        MY APPOINTMENTS
-      </a>
-      <a class="nav-link" href="profile.php">
-        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-        PROFILE
-      </a>
+      
+      <?php if ($is_logged_in): ?>
+        <a class="nav-link" href="dashboard.php">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+          DASHBOARD
+        </a>
+        <a class="nav-link" href="resources.php">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/></svg>
+          RESOURCES
+        </a>
+        <a class="nav-link" href="assessment.php">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+          ASSESSMENT
+        </a>
+        <a class="nav-link" href="book_appointment.php">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+          BOOK APPOINTMENT
+        </a>
+        <a class="nav-link" href="appointments.php">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
+          MY APPOINTMENTS
+        </a>
+        <a class="nav-link" href="profile.php">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+          PROFILE
+        </a>
+      <?php else: ?>
+        <a class="nav-link" href="pre_assessment.php">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            <line x1="16" y1="13" x2="8" y2="13"></line>
+          </svg>
+          PRE ASSESSMENT
+        </a>
+        <a class="nav-link" href="login.php">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
+            <polyline points="10 17 15 12 10 7"></polyline>
+            <line x1="15" y1="12" x2="3" y2="12"></line>
+          </svg>
+          LOGIN
+        </a>
+        <a class="nav-link" href="register.php">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+            <circle cx="8.5" cy="7" r="4"></circle>
+            <path d="M20 8v7"></path>
+            <path d="M23 11h-6"></path>
+          </svg>
+          REGISTER
+        </a>
+      <?php endif; ?>
+
       <a class="nav-link active" href="faq.php">
-        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+          <line x1="12" y1="17" x2="12.01" y2="17"></line>
+        </svg>
         FAQS
       </a>
     </nav>
 
-    <!-- Dark Mode Toggle Button -->
     <div class="theme-toggle">
-  <button id="themeToggle">
-    <svg id="themeIcon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <!-- Sun icon (default for light mode) -->
-      <circle cx="12" cy="12" r="5"></circle>
-      <line x1="12" y1="1" x2="12" y2="3"></line>
-      <line x1="12" y1="21" x2="12" y2="23"></line>
-      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-      <line x1="1" y1="12" x2="3" y2="12"></line>
-      <line x1="21" y1="12" x2="23" y2="12"></line>
-      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-    </svg>
-    <span id="themeLabel">Light Mode</span>
-  </button>
-</div>
+      <button id="themeToggle">
+        <svg id="themeIcon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="5"></circle>
+          <line x1="12" y1="1" x2="12" y2="3"></line>
+          <line x1="12" y1="21" x2="12" y2="23"></line>
+          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+          <line x1="1" y1="12" x2="3" y2="12"></line>
+          <line x1="21" y1="12" x2="23" y2="12"></line>
+          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+        </svg>
+        <span id="themeLabel">Light Mode</span>
+      </button>
+    </div>
 
-    <!-- Logout Button -->
+    <?php if ($is_logged_in): ?>
     <a href="logout.php" class="nav-link" style="margin-top: 1rem; color: #ef5350; border-top: 1px solid var(--border-color); padding-top: 1rem;">
       <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
       LOGOUT
     </a>
+    <?php endif; ?>
   </div>
 
-  <!-- Main Content -->
   <div class="main-wrapper">
     <div class="content-inner">
       
-      <!-- Header -->
       <div class="page-header">
         <h1>Hello, <span class="user-name"><?= htmlspecialchars($user_name) ?></span>!</h1>
         <p class="subtitle">Find answers to commonly asked questions</p>
       </div>
 
-      <!-- FAQ Container -->
       <div class="faq-container">
         <h2 class="section-title">Frequently Asked Questions</h2>
 
         <div class="faq-accordion">
-          <!-- Question 1 -->
           <div class="faq-item">
             <button class="faq-question" onclick="toggleFaq(this)">
               How do I take a mental health assessment?
@@ -413,7 +440,6 @@ $user_name = $_SESSION['user']['fullname'] ?? 'User';
             </div>
           </div>
 
-          <!-- Question 2 -->
           <div class="faq-item">
             <button class="faq-question" onclick="toggleFaq(this)">
               How do I book or reschedule an appointment?
@@ -425,7 +451,6 @@ $user_name = $_SESSION['user']['fullname'] ?? 'User';
             </div>
           </div>
 
-          <!-- Question 3 -->
           <div class="faq-item">
             <button class="faq-question" onclick="toggleFaq(this)">
               What types of specialists are available?
@@ -437,7 +462,6 @@ $user_name = $_SESSION['user']['fullname'] ?? 'User';
             </div>
           </div>
 
-          <!-- Question 4 -->
           <div class="faq-item">
             <button class="faq-question" onclick="toggleFaq(this)">
               Is my data private and secure?
@@ -449,7 +473,6 @@ $user_name = $_SESSION['user']['fullname'] ?? 'User';
             </div>
           </div>
 
-          <!-- Question 5 -->
           <div class="faq-item">
             <button class="faq-question" onclick="toggleFaq(this)">
               What should I expect during my first appointment?
@@ -461,7 +484,6 @@ $user_name = $_SESSION['user']['fullname'] ?? 'User';
             </div>
           </div>
 
-          <!-- Question 6 -->
           <div class="faq-item">
             <button class="faq-question" onclick="toggleFaq(this)">
               Can I change my specialist after booking?
@@ -482,73 +504,69 @@ $user_name = $_SESSION['user']['fullname'] ?? 'User';
     </div>
   </div>
 
-  <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script>
     // FAQ Toggle Function - expands/collapses FAQ answers
     function toggleFaq(button) {
-      // Get the answer element that comes right after the button
       const answer = button.nextElementSibling;
-      // Check if this FAQ is currently active/open
       const isActive = button.classList.contains('active');
       
-      // Close all other FAQs first (accordion behavior - only one open at a time)
       document.querySelectorAll('.faq-question').forEach(q => {
-        q.classList.remove('active'); // Remove active styling
-        q.nextElementSibling.classList.remove('show'); // Hide the answer
+        q.classList.remove('active');
+        q.nextElementSibling.classList.remove('show');
       });
       
-      // If the clicked FAQ wasn't already open, open it
       if (!isActive) {
-        button.classList.add('active'); // Add active styling (changes icon from + to -)
-        answer.classList.add('show'); // Show the answer with animation
+        button.classList.add('active');
+        answer.classList.add('show');
       }
     }
 
-    // Open first FAQ by default when page loads
+    // Load saved theme on DOMContentLoaded
     document.addEventListener('DOMContentLoaded', function() {
+      // Auto-open first FAQ item (only if not a redirect/etc.)
       const firstQuestion = document.querySelector('.faq-question');
       if (firstQuestion) {
         toggleFaq(firstQuestion);
       }
+      
+      loadTheme();
     });
 
+    // Dark Mode Icons
+    const sunIcon = '<circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>';
+    const moonIcon = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>';
+
     // Dark Mode Toggle Functionality
-    // Dark mode toggle with SVG icons
-const toggleBtn = document.getElementById('themeToggle');
-const icon = document.getElementById('themeIcon');
-const label = document.getElementById('themeLabel');
+    const toggleBtn = document.getElementById('themeToggle');
+    const themeIcon = document.getElementById('themeIcon');
+    const themeLabel = document.getElementById('themeLabel');
 
-// SVG icon strings
-const sunIcon = '<circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>';
+    function updateThemeVisuals(isDark) {
+        themeLabel.textContent = isDark ? 'Dark Mode' : 'Light Mode';
+        themeIcon.innerHTML = isDark ? moonIcon : sunIcon;
+    }
 
-const moonIcon = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>';
+    function loadTheme() {
+        const prefersDark = localStorage.getItem('dark-mode') === 'true';
+        if (prefersDark) {
+            document.body.classList.add('dark-mode');
+        }
+        updateThemeVisuals(prefersDark);
+    }
+    
+    toggleBtn.addEventListener('click', () => {
+        document.body.classList.toggle('dark-mode');
+        const isDark = document.body.classList.contains('dark-mode');
+        localStorage.setItem('dark-mode', isDark);
+        
+        themeIcon.style.transform = 'rotate(360deg)';
+        setTimeout(() => themeIcon.style.transform = 'rotate(0deg)', 500);
+        
+        updateThemeVisuals(isDark);
+    });
 
-// Check for saved theme preference
-const prefersDark = localStorage.getItem('dark-mode') === 'true';
-if (prefersDark) {
-  document.body.classList.add('dark-mode');
-  icon.innerHTML = moonIcon;
-  label.textContent = 'Dark Mode';
-}
-
-// Toggle theme
-toggleBtn.addEventListener('click', () => {
-  document.body.classList.toggle('dark-mode');
-  const isDark = document.body.classList.contains('dark-mode');
-  localStorage.setItem('dark-mode', isDark);
-  
-  // Animate icon
-  icon.style.transform = 'rotate(360deg)';
-  setTimeout(() => icon.style.transform = 'rotate(0deg)', 500);
-  
-  // Update icon and label
-  icon.innerHTML = isDark ? moonIcon : sunIcon;
-  label.textContent = isDark ? 'Dark Mode' : 'Light Mode';
-});
-
-// Smooth transition for icon
-icon.style.transition = 'transform 0.5s ease';
+    themeIcon.style.transition = 'transform 0.5s ease';
   </script>
 </body>
 </html>
