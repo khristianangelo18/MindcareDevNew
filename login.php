@@ -77,12 +77,10 @@ if (isset($_SESSION['user']))
       color: var(--toggle-text-color);
     }
 
-    .theme-icon {
-      font-size: 1.2rem;
+    #themeIcon {
       transition: transform 0.5s ease;
     }
-
-    .theme-icon.rotate {
+    #themeIcon.rotate {
       transform: rotate(360deg);
     }
 
@@ -94,6 +92,7 @@ if (isset($_SESSION['user']))
       transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
     }
 
+
     .login-container input::placeholder {
       color: var(--muted);
       opacity: 0.7;
@@ -104,6 +103,13 @@ if (isset($_SESSION['user']))
       color: var(--field-text);
       border-color: var(--line);
     }
+
+    /* Dark mode email icon - use lighter color */
+      body.dark-mode .login-container input[type="email"]{
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%23b0b0b0' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='5' width='18' height='14' rx='2' ry='2'/%3E%3Cpolyline points='22,7 12,13 2,7'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: 18px 50%;
+      }
 
     body.dark-mode .login-container input::placeholder {
       color: var(--muted);
@@ -187,9 +193,19 @@ if (isset($_SESSION['user']))
 <body class="login-page">
   <!-- Dark Mode Toggle -->
   <button class="theme-toggle-btn" id="themeToggle">
-    <span class="theme-icon" id="themeIcon">🌞</span>
-    <span id="themeLabel">Light</span>
-  </button>
+  <svg id="themeIcon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="5"></circle>
+    <line x1="12" y1="1" x2="12" y2="3"></line>
+    <line x1="12" y1="21" x2="12" y2="23"></line>
+    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+    <line x1="1" y1="12" x2="3" y2="12"></line>
+    <line x1="21" y1="12" x2="23" y2="12"></line>
+    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+  </svg>
+  <span id="themeLabel">Light Mode</span>
+</button>
 
   <div class="container-fluid p-0">
     <div class="row g-0 min-vh-100">
@@ -234,6 +250,9 @@ if (isset($_SESSION['user']))
   </div>
 
   <script>
+    const sunIcon = '<circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>';
+    const moonIcon = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>';
+
     // Password toggle function
     function togglePassword() {
       const passwordField = document.getElementById("password");
@@ -309,8 +328,8 @@ if (isset($_SESSION['user']))
     const prefersDark = localStorage.getItem('dark-mode') === 'true';
     if (prefersDark) {
       document.body.classList.add('dark-mode');
-      themeIcon.textContent = '🌙';
-      themeLabel.textContent = 'Dark';
+      themeIcon.innerHTML = moonIcon;
+      themeLabel.textContent = 'Dark Mode';
       updateLogo(true);
     }
 
@@ -325,9 +344,9 @@ if (isset($_SESSION['user']))
       setTimeout(() => themeIcon.classList.remove('rotate'), 500);
       
       // Update icon and label
-      themeIcon.textContent = isDark ? '🌙' : '🌞';
-      themeLabel.textContent = isDark ? 'Dark' : 'Light';
-      
+      themeIcon.innerHTML = isDark ? moonIcon : sunIcon;
+      themeLabel.textContent = isDark ? 'Dark Mode' : 'Light Mode';
+            
       // Update logo
       updateLogo(isDark);
     });

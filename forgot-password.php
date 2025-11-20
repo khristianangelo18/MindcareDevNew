@@ -327,6 +327,13 @@ session_start();
       box-shadow: 0 12px 28px rgba(48,170,153,.42);
     }
 
+    #themeIcon {
+      transition: transform 0.5s ease;
+    }
+    #themeIcon.rotate {
+      transform: rotate(360deg);
+    }
+
     /* FIX: ALL links and text MUST be visible in dark mode */
     .form-container a {
       color: #7c8a99;
@@ -382,17 +389,26 @@ session_start();
   </style>
 </head>
 
-<body class="forgot-password-page">
-  <button class="theme-toggle-btn" id="themeToggle">
-    <span class="theme-icon" id="themeIcon">🌞</span>
-    <span id="themeLabel">Light</span>
-  </button>
+<button class="theme-toggle-btn" id="themeToggle">
+  <svg id="themeIcon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="5"></circle>
+    <line x1="12" y1="1" x2="12" y2="3"></line>
+    <line x1="12" y1="21" x2="12" y2="23"></line>
+    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+    <line x1="1" y1="12" x2="3" y2="12"></line>
+    <line x1="21" y1="12" x2="23" y2="12"></line>
+    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+  </svg>
+  <span id="themeLabel">Light Mode</span>
+</button>
 
   <div class="container-fluid p-0">
     <div class="row g-0 min-vh-100">
 
       <div class="col-md-6 info-side">
-        <img src="images/MindCare1.png" alt="MindCare Logo" class="img-fluid" id="logoImage" />
+        <img src="images/MindCare.png" alt="MindCare Logo" class="img-fluid" id="logoImage" />
         <h4>Change Password</h4>
         <p class="text-muted fst-italic">Keep your account secure.</p>
         <p>Enter your old password to verify your identity, then create a strong new password to protect your account.</p>
@@ -466,6 +482,8 @@ session_start();
   </div>
 
   <script>
+    const sunIcon = '<circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>';
+    const moonIcon = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>';
     function togglePassword(fieldId, iconId) {
       const passwordField = document.getElementById(fieldId);
       const toggleIcon = document.getElementById(iconId);
@@ -492,8 +510,8 @@ session_start();
     const prefersDark = localStorage.getItem('dark-mode') === 'true';
     if (prefersDark) {
       document.body.classList.add('dark-mode');
-      themeIcon.textContent = '🌙';
-      themeLabel.textContent = 'Dark';
+      themeIcon.innerHTML = moonIcon;
+      themeLabel.textContent = 'Dark Mode';
       updateLogo(true);
     }
 
@@ -505,8 +523,8 @@ session_start();
       themeIcon.classList.add('rotate');
       setTimeout(() => themeIcon.classList.remove('rotate'), 500);
       
-      themeIcon.textContent = isDark ? '🌙' : '🌞';
-      themeLabel.textContent = isDark ? 'Dark' : 'Light';
+      themeIcon.innerHTML = isDark ? moonIcon : sunIcon;
+      themeLabel.textContent = isDark ? 'Dark Mode' : 'Light Mode';
       updateLogo(isDark);
     });
   </script>
