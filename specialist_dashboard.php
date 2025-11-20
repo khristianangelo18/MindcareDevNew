@@ -11,118 +11,55 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'Specialist') {
 $specialist_id = $_SESSION['user']['id'];
 $specialist_name = $_SESSION['user']['fullname'];
 
-// FIX: Try multiple methods to fetch appointments with patient info
-$sevenDaysAgo = date('Y-m-d', strtotime('-7 days'));
-
-// Method 1: Try with PostgREST foreign key syntax (using constraint name)
-$recentAppointments = supabaseSelect(
-  'appointments',
-  [
-    'specialist_id' => $specialist_id,
-    'created_at' => ['operator' => 'gte', 'value' => $sevenDaysAgo]
-  ],
-  'id,user_id,appointment_date,appointment_time,status,created_at,users!appointments_user_id_fkey(fullname)',
-  'created_at.desc',
-  null,
-  true  // Use SERVICE_KEY to bypass RLS
-);
-
-// Method 2: Fallback - If foreign key doesn't work, fetch appointments and users separately
-if (empty($recentAppointments) || !isset($recentAppointments[0]['users'])) {
-  // Fetch appointments without foreign key
-  $recentAppointments = supabaseSelect(
-    'appointments',
-    [
-      'specialist_id' => $specialist_id,
-      'created_at' => ['operator' => 'gte', 'value' => $sevenDaysAgo]
-    ],
-    'id,user_id,appointment_date,appointment_time,status,created_at',
-    'created_at.desc',
-    null,
-    true
-  );
-  
-  // Fetch all users in one query for efficiency
-  $userIds = array_unique(array_column($recentAppointments, 'user_id'));
-  $users = [];
-  
-  if (!empty($userIds)) {
-    $allUsers = supabaseSelect(
-      'users',
-      ['id' => ['operator' => 'in', 'value' => '(' . implode(',', $userIds) . ')']],
-      'id,fullname,email,gender',
-      null,
-      null,
-      true
-    );
-    
-    // Index users by ID for quick lookup
-    foreach ($allUsers as $user) {
-      $users[$user['id']] = $user;
-    }
-    
-    // Attach user info to appointments
-    foreach ($recentAppointments as &$apt) {
-      $apt['users'] = $users[$apt['user_id']] ?? ['fullname' => 'Unknown User'];
-    }
-    unset($apt);
-  }
-}
-
-// Limit to 10 results
-$recent_bookings = array_slice($recentAppointments, 0, 10);
-
-// Fetch all appointments for booking management using the same fallback method
+// Fetch all appointments for this specialist
 $allAppointments = supabaseSelect(
   'appointments',
   ['specialist_id' => $specialist_id],
-  'id,user_id,appointment_date,appointment_time,status,notes,created_at,users!appointments_user_id_fkey(fullname,email,gender)',
+  'id,user_id,appointment_date,appointment_time,status,notes,created_at',
   'appointment_date.desc,appointment_time.desc',
   null,
   true
 );
 
-// Fallback for all appointments if foreign key fails
-if (empty($allAppointments) || !isset($allAppointments[0]['users'])) {
-  $allAppointments = supabaseSelect(
-    'appointments',
-    ['specialist_id' => $specialist_id],
-    'id,user_id,appointment_date,appointment_time,status,notes,created_at',
-    'appointment_date.desc,appointment_time.desc',
+// Fetch all unique user IDs from appointments
+$userIds = array_unique(array_column($allAppointments, 'user_id'));
+$users = [];
+
+if (!empty($userIds)) {
+  // Fetch user details
+  $allUsers = supabaseSelect(
+    'users',
+    ['id' => ['operator' => 'in', 'value' => '(' . implode(',', $userIds) . ')']],
+    'id,fullname,email,gender',
+    null,
     null,
     true
   );
   
-  // Fetch users
-  $userIds = array_unique(array_column($allAppointments, 'user_id'));
-  $users = [];
-  
-  if (!empty($userIds)) {
-    $allUsers = supabaseSelect(
-      'users',
-      ['id' => ['operator' => 'in', 'value' => '(' . implode(',', $userIds) . ')']],
-      'id,fullname,email,gender',
-      null,
-      null,
-      true
-    );
-    
-    foreach ($allUsers as $user) {
-      $users[$user['id']] = $user;
-    }
-    
-    foreach ($allAppointments as &$apt) {
-      $apt['users'] = $users[$apt['user_id']] ?? [
-        'fullname' => 'Unknown User',
-        'email' => 'N/A',
-        'gender' => 'N/A'
-      ];
-    }
-    unset($apt);
+  // Index users by ID
+  foreach ($allUsers as $user) {
+    $users[$user['id']] = $user;
   }
 }
 
-// Get statistics
+// Attach user info to appointments
+foreach ($allAppointments as &$apt) {
+  $apt['users'] = $users[$apt['user_id']] ?? [
+    'fullname' => 'Unknown User',
+    'email' => 'N/A',
+    'gender' => 'N/A'
+  ];
+}
+unset($apt);
+
+// Get recent bookings (last 7 days)
+$sevenDaysAgo = date('Y-m-d', strtotime('-7 days'));
+$recent_bookings = array_filter($allAppointments, function($apt) use ($sevenDaysAgo) {
+  return $apt['created_at'] >= $sevenDaysAgo;
+});
+$recent_bookings = array_slice($recent_bookings, 0, 10);
+
+// Calculate statistics
 $total_appointments = count($allAppointments);
 $confirmed = 0;
 $pending = 0;
@@ -162,7 +99,6 @@ $stats = [
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Specialist Dashboard - MindCare</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css" />
   <style>
     :root {
       --primary-teal: #5ad0be;
@@ -190,7 +126,7 @@ $stats = [
       --text-muted: #b0b0b0;
       --border-color: #3a3a3a;
     }
-
+    
     .sidebar {
       position: fixed;
       left: 0;
@@ -300,25 +236,40 @@ $stats = [
       transition: color 0.3s ease;
     }
 
-    .header-section {
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1.5rem;
       margin-bottom: 2rem;
     }
 
-    .header-section h1 {
-      font-size: 1.75rem;
-      font-weight: 600;
-      color: var(--text-dark);
-      margin-bottom: 0.5rem;
+    .stat-card {
+      background: var(--card-bg);
+      border-radius: 12px;
+      padding: 1.5rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      border: 1px solid var(--border-color);
+      transition: all 0.3s ease;
     }
 
-    .date-time {
+    .stat-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+    }
+
+    .stat-card .card-title {
+      font-size: 0.875rem;
       color: var(--text-muted);
-      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 0.5rem;
+      font-weight: 600;
     }
 
-    .specialist-name {
-      color: var(--primary-teal);
-      font-weight: 600;
+    .stat-card .card-value {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--text-dark);
     }
 
     .card {
@@ -328,21 +279,12 @@ $stats = [
       box-shadow: 0 2px 8px rgba(0,0,0,0.08);
       margin-bottom: 1.5rem;
       border: 1px solid var(--border-color);
+      transition: all 0.3s ease;
     }
 
-    .card-title {
-      font-size: 0.875rem;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      margin-bottom: 0.5rem;
-      font-weight: 600;
-    }
-
-    .card-value {
-      font-size: 2rem;
-      font-weight: 700;
+    .card h5 {
       color: var(--text-dark);
+      transition: color 0.3s ease;
     }
 
     .tab-navigation {
@@ -378,10 +320,13 @@ $stats = [
     .table {
       width: 100%;
       border-collapse: collapse;
+      background: var(--card-bg);
+      transition: background-color 0.3s ease;
     }
 
     .table thead {
       background: var(--bg-light);
+      transition: background-color 0.3s ease;
     }
 
     .table th {
@@ -393,22 +338,21 @@ $stats = [
       text-transform: uppercase;
       letter-spacing: 0.5px;
       border-bottom: 2px solid var(--border-color);
+      transition: all 0.3s ease;
     }
 
     .table td {
       padding: 1rem;
       border-bottom: 1px solid var(--border-color);
       font-size: 0.9rem;
+      color: var(--text-dark);
+      background: var(--card-bg);
+      transition: all 0.3s ease;
     }
 
-    .table tbody tr:hover {
+    .table tbody tr:hover td {
       background: var(--bg-light);
     }
-
-    .status-confirmed { background: #28a745; color: white; }
-    .status-pending { background: #ffc107; color: #2b2f38; }
-    .status-completed { background: #17a2b8; color: white; }
-    .status-cancelled { background: #dc3545; color: white; }
 
     .badge {
       padding: 0.375rem 0.75rem;
@@ -419,6 +363,11 @@ $stats = [
       letter-spacing: 0.5px;
       display: inline-block;
     }
+
+    .status-confirmed { background: #28a745; color: white; }
+    .status-pending { background: #ffc107; color: #2b2f38; }
+    .status-completed { background: #17a2b8; color: white; }
+    .status-cancelled { background: #dc3545; color: white; }
 
     .btn {
       padding: 0.5rem 1rem;
@@ -460,12 +409,10 @@ $stats = [
       color: white;
     }
 
-    .btn-danger {
-      background: #dc3545;
-      color: white;
+    .btn-success:hover {
+      background: #218838;
     }
 
-    /* Form Elements */
     .form-select {
       padding: 0.5rem;
       border: 1px solid var(--border-color);
@@ -492,6 +439,7 @@ $stats = [
       padding: 1rem;
       border-radius: 8px;
       margin-bottom: 1rem;
+      transition: all 0.3s ease;
     }
 
     .alert-info {
@@ -500,11 +448,10 @@ $stats = [
       border: 1px solid #b8daff;
     }
 
-    select.form-select {
-      padding: 0.5rem;
-      border: 1px solid var(--border-color);
-      border-radius: 6px;
-      font-size: 0.875rem;
+    body.dark-mode .alert-info {
+      background: #1a3a52;
+      color: #9fc9e8;
+      border: 1px solid #2a5a7a;
     }
 
     .d-flex {
@@ -519,16 +466,16 @@ $stats = [
       align-items: center;
     }
 
-    .mb-3 {
-      margin-bottom: 1rem;
-    }
-
-    .me-2 {
-      margin-right: 0.5rem;
-    }
-
     .table-responsive {
       overflow-x: auto;
+    }
+
+    .text-muted {
+      color: var(--text-muted) !important;
+    }
+
+    small.text-muted {
+      font-size: 0.875rem;
     }
   </style>
 </head>
@@ -549,35 +496,32 @@ $stats = [
         PROFILE
       </a>
     </nav>
-     <div class="theme-toggle">
-  <button id="themeToggle">
-    <svg id="themeIcon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <!-- Sun icon (default for light mode) -->
-      <circle cx="12" cy="12" r="5"></circle>
-      <line x1="12" y1="1" x2="12" y2="3"></line>
-      <line x1="12" y1="21" x2="12" y2="23"></line>
-      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-      <line x1="1" y1="12" x2="3" y2="12"></line>
-      <line x1="21" y1="12" x2="23" y2="12"></line>
-      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-    </svg>
-    <span id="themeLabel">Light Mode</span>
-  </button>
-</div>
 
-    <!-- Logout Button at Bottom -->
-    <a href="logout.php" class="nav-link" style="margin-top: 1rem; color: #ef5350; border-top: 1px solid var(--border-color); padding-top: 1rem;">
+    <div class="theme-toggle">
+      <button id="themeToggle">
+        <svg id="themeIcon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="5"></circle>
+          <line x1="12" y1="1" x2="12" y2="3"></line>
+          <line x1="12" y1="21" x2="12" y2="23"></line>
+          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+          <line x1="1" y1="12" x2="3" y2="12"></line>
+          <line x1="21" y1="12" x2="23" y2="12"></line>
+          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+        </svg>
+        <span id="themeLabel">Light Mode</span>
+      </button>
+    </div>
+
+    <a href="admin_logout.php" class="nav-link" style="margin-top: 1rem; color: #ef5350; border-top: 1px solid var(--border-color); padding-top: 1rem;">
       <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
       LOGOUT
     </a>
   </div>
 
-
   <!-- Main Content -->
   <div class="main-content">
-    
     <!-- Header -->
     <div class="dashboard-header">
       <h1>Welcome, <span class="user-name"><?= htmlspecialchars($specialist_name) ?></span></h1>
@@ -585,30 +529,22 @@ $stats = [
     </div>
 
     <!-- Statistics Cards -->
-    <div class="row">
-      <div class="col-md-3 mb-3">
-        <div class="card">
-          <div class="card-title">Total Appointments</div>
-          <div class="card-value"><?= $stats['total_appointments'] ?></div>
-        </div>
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="card-title">Total Appointments</div>
+        <div class="card-value"><?= $stats['total_appointments'] ?></div>
       </div>
-      <div class="col-md-3 mb-3">
-        <div class="card">
-          <div class="card-title">Confirmed</div>
-          <div class="card-value" style="color: #28a745;"><?= $stats['confirmed'] ?></div>
-        </div>
+      <div class="stat-card">
+        <div class="card-title">Confirmed</div>
+        <div class="card-value" style="color: #28a745;"><?= $stats['confirmed'] ?></div>
       </div>
-      <div class="col-md-3 mb-3">
-        <div class="card">
-          <div class="card-title">Pending</div>
-          <div class="card-value" style="color: #ffc107;"><?= $stats['pending'] ?></div>
-        </div>
+      <div class="stat-card">
+        <div class="card-title">Pending</div>
+        <div class="card-value" style="color: #ffc107;"><?= $stats['pending'] ?></div>
       </div>
-      <div class="col-md-3 mb-3">
-        <div class="card">
-          <div class="card-title">Completed</div>
-          <div class="card-value" style="color: #17a2b8;"><?= $stats['completed'] ?></div>
-        </div>
+      <div class="stat-card">
+        <div class="card-title">Completed</div>
+        <div class="card-value" style="color: #17a2b8;"><?= $stats['completed'] ?></div>
       </div>
     </div>
 
@@ -639,7 +575,7 @@ $stats = [
                 <?php foreach ($recent_bookings as $row): ?>
                   <tr>
                     <td><?= $row['id'] ?></td>
-                    <td><?= htmlspecialchars($row['users']['fullname'] ?? 'N/A') ?></td>
+                    <td><?= htmlspecialchars($row['users']['fullname']) ?></td>
                     <td><?= date('M d, Y', strtotime($row['appointment_date'])) ?></td>
                     <td><?= date('g:i A', strtotime($row['appointment_time'])) ?></td>
                     <td>
@@ -662,8 +598,8 @@ $stats = [
     <!-- Booking Management Tab Content -->
     <div id="bookingsContent" style="display: none;">
       <div class="card">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-          <h5 style="margin-bottom: 0;">All Appointments</h5>
+        <div class="d-flex justify-content-between align-items-center" style="margin-bottom: 1.5rem;">
+          <h5 style="margin: 0;">All Appointments</h5>
           <button class="btn btn-outline-primary btn-sm" onclick="window.location.reload()">
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 4px;"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
             Refresh
@@ -689,12 +625,12 @@ $stats = [
                   <tr>
                     <td><?= $row['id'] ?></td>
                     <td>
-                      <?= htmlspecialchars($row['users']['fullname'] ?? 'N/A') ?>
-                      <?php if (isset($row['users']['gender']) && $row['users']['gender']): ?>
+                      <?= htmlspecialchars($row['users']['fullname']) ?>
+                      <?php if ($row['users']['gender'] !== 'N/A'): ?>
                         <br><small class="text-muted"><?= htmlspecialchars($row['users']['gender']) ?></small>
                       <?php endif; ?>
                     </td>
-                    <td><?= htmlspecialchars($row['users']['email'] ?? 'N/A') ?></td>
+                    <td><?= htmlspecialchars($row['users']['email']) ?></td>
                     <td><?= date('M d, Y', strtotime($row['appointment_date'])) ?></td>
                     <td><?= date('g:i A', strtotime($row['appointment_time'])) ?></td>
                     <td><?= htmlspecialchars($row['notes'] ?? '-') ?></td>
@@ -720,10 +656,8 @@ $stats = [
         <?php endif; ?>
       </div>
     </div>
-
   </div>
 
-  <!-- Tab Switching Script -->
   <script>
     const dashboardTab = document.getElementById('dashboardTab');
     const bookingsTab = document.getElementById('bookingsTab');
@@ -750,7 +684,6 @@ $stats = [
     const themeLabel = document.getElementById('themeLabel');
     const body = document.body;
 
-    // Check for saved theme preference
     const currentTheme = localStorage.getItem('theme') || 'light';
     if (currentTheme === 'dark') {
       body.classList.add('dark-mode');
@@ -772,6 +705,5 @@ $stats = [
       }
     });
   </script>
-
 </body>
 </html>

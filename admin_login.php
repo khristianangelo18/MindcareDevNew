@@ -226,7 +226,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       margin-bottom: 1rem;
       box-shadow: inset 0 0 0 1px rgba(255,255,255,.25);
     }
-
+    
     .form-side {
       background: var(--bg-white);
       display: flex;
@@ -432,7 +432,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           <?php endif; ?>
 
           <form method="POST" id="adminLoginForm">
-            <input type="email" name="email" class="form-control mb-3" placeholder="Email Address" required value="<?= isset($_POST['email']) ? htmlspecialchars($_POST['email']) : '' ?>">
+            <input type="email" name="email" class="form-control mb-3" placeholder="Email" required value="<?= isset($_POST['email']) ? htmlspecialchars($_POST['email']) : '' ?>">
             <div class="mb-3 password-wrapper">
               <input type="password" name="password" id="password" class="form-control" placeholder="Password" required>
               <span class="toggle-password" onclick="togglePassword()">

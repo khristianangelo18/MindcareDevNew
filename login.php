@@ -333,8 +333,18 @@ if (isset($_SESSION['user']))
 <body class="login-page">
   <!-- Dark Mode Toggle -->
   <button class="theme-toggle-btn" id="themeToggle">
-    <span class="theme-icon" id="themeIcon">🌞</span>
-    <span id="themeLabel">Light</span>
+    <svg id="themeIcon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+    <span id="themeLabel">Light Mode</span>
   </button>
 
   <div class="container-fluid p-0">
@@ -380,6 +390,10 @@ if (isset($_SESSION['user']))
   </div>
 
   <script>
+    const sunIcon = '<circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>';
+    const moonIcon = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>';
+
+    // Password toggle function
     function togglePassword() {
       const passwordField = document.getElementById("password");
       const toggleIcon = document.getElementById("toggleIcon");
@@ -413,8 +427,8 @@ if (isset($_SESSION['user']))
     const prefersDark = localStorage.getItem('dark-mode') === 'true';
     if (prefersDark) {
       document.body.classList.add('dark-mode');
-      themeIcon.textContent = '🌙';
-      themeLabel.textContent = 'Dark';
+      themeIcon.innerHTML = moonIcon;
+      themeLabel.textContent = 'Dark Mode';
       updateLogo(true);
     }
 
@@ -429,8 +443,8 @@ if (isset($_SESSION['user']))
       setTimeout(() => themeIcon.classList.remove('rotate'), 500);
       
       // Update icon and label
-      themeIcon.textContent = isDark ? '🌙' : '🌞';
-      themeLabel.textContent = isDark ? 'Dark' : 'Light';
+      themeIcon.innerHTML = isDark ? moonIcon : sunIcon;
+      themeLabel.textContent = isDark ? 'Dark Mode' : 'Light Mode';
       
       // Update logo
       updateLogo(isDark);

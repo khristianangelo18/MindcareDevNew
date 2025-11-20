@@ -41,11 +41,11 @@ foreach ($specialistUsers as $specialist) {
     'experience' => '2 Years', // Default experience
     'contact' => 'Contact via platform', // Default contact message
     'availability' => [
-      'Monday' => ['09:00 AM', '10:00 AM', '02:00 PM'],
-      'Tuesday' => ['09:00 AM', '11:00 AM'],
-      'Wednesday' => ['10:00 AM', '01:00 PM'],
-      'Thursday' => ['09:00 AM', '03:00 PM'],
-      'Friday' => ['10:00 AM', '02:00 PM']
+      'Monday' => ['09:00 AM - 10:00 AM', '10:00 AM - 11:00 AM', '02:00 PM - 03:00 PM'],
+      'Tuesday' => ['09:00 AM - 10:00 AM', '11:00 AM - 12:00 PM'],
+      'Wednesday' => ['10:00 AM - 11:00 AM', '01:00 PM - 02:00 PM'],
+      'Thursday' => ['09:00 AM - 10:00 AM', '03:00 PM - 04:00 PM'],
+      'Friday' => ['10:00 AM - 11:00 AM', '02:00 PM - 03:00 PM']
     ]
   ];
 }
@@ -714,14 +714,14 @@ if (empty($specialists)) {
 
     .timeslot-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
       gap: 0.75rem;
     }
 
     .timeslot-btn {
-      background: var(--primary-teal);
-      color: white;
-      border: none;
+      background: rgba(90, 208, 190, 0.2);
+      color: var(--primary-teal);
+      border: 1px solid var(--primary-teal);
       padding: 0.75rem;
       border-radius: 8px;
       font-size: 0.9rem;
@@ -731,15 +731,33 @@ if (empty($specialists)) {
     }
 
     .timeslot-btn:hover {
-      background: var(--primary-teal-dark);
-      transform: translateY(-2px);
+      background: rgba(90, 208, 190, 0.3);
+      color: white;
     }
 
     .timeslot-btn.selected {
-      background: var(--primary-teal-dark);
-      box-shadow: 0 4px 8px rgba(90, 208, 190, 0.3);
+      background: var(--primary-teal);
+      color: white;
+      border-color: var(--primary-teal);
     }
 
+    body.dark-mode .timeslot-btn {
+      background: rgba(90, 208, 190, 0.2);
+      color: var(--primary-teal);
+      border: 1px solid var(--primary-teal);
+    }
+
+    body.dark-mode .timeslot-btn:hover {
+      background: rgba(90, 208, 190, 0.3);
+      color: white;
+    }
+
+    body.dark-mode .timeslot-btn.selected {
+      background: var(--primary-teal);
+      color: white;
+      border-color: var(--primary-teal);
+    }
+    
     /* Submit Button */
     .submit-wrapper {
       text-align: center;
@@ -1197,12 +1215,14 @@ icon.style.transition = 'transform 0.5s ease';
     function selectDate(day) {
       const date = new Date(currentYear, currentMonth, day);
       
-      // Prevent selecting past dates
+      // Prevent selecting dates that are not at least one day ahead
       const today = new Date();
       today.setHours(0, 0, 0, 0);
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
       date.setHours(0, 0, 0, 0);
-      if (date.getTime() < today.getTime()) {
-        return; // Don't allow past dates to be selected
+      if (date.getTime() < tomorrow.getTime()) {
+        return; // Don't allow today or past dates to be selected
       }
       
       const dayName = date.toLocaleDateString('en-US', { weekday: 'long' });
