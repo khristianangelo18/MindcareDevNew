@@ -12,8 +12,6 @@ if (isset($_SESSION['user']))
   <link rel="stylesheet" href="style.css" />
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
-
     /* Dark Mode Variables */
     :root {
       --teal-1: #5ad0be;
@@ -26,6 +24,11 @@ if (isset($_SESSION['user']))
       --btn-from: #38c7a3;
       --btn-to: #2fb29c;
       --bg-white: #ffffff;
+      --alert-danger-bg: #ffe6e8;
+      --alert-danger-text: #9b1c1f;
+      --alert-success-bg: #d4edda;
+      --alert-success-text: #155724;
+      /* FIXED: Added gradient variables */
       --info-side-gradient-start: var(--teal-1);
       --info-side-gradient-mid: var(--teal-2);
       --info-side-gradient-end: var(--teal-3);
@@ -42,6 +45,7 @@ if (isset($_SESSION['user']))
       --alert-danger-text: #ef5350;
       --alert-success-bg: rgba(76, 175, 80, 0.2);
       --alert-success-text: #81c784;
+      /* FIXED: Added dark mode gradient adjustments */
       --info-side-gradient-start: #0a6a74;
       --info-side-gradient-mid: #1aa592;
       --info-side-gradient-end: #2e7d32;
@@ -49,22 +53,11 @@ if (isset($_SESSION['user']))
     }
 
     body {
-      font-family: 'Poppins', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      color: var(--field-text);
-      min-height: 100vh;
-      overflow: hidden;
-      background: var(--bg-white);
       transition: background-color 0.3s ease, color 0.3s ease;
     }
 
-    .login-page {
-      min-height: 100vh;
-      overflow: hidden;
-      background: var(--bg-white);
-    }
-
-    .login-page .row {
-      min-height: 100vh;
+    body.dark-mode {
+      background: #1a1a1a !important;
     }
 
     /* Dark Mode Toggle Button */
@@ -99,98 +92,224 @@ if (isset($_SESSION['user']))
       box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
     }
 
-    #themeIcon {
+    .theme-icon {
+      font-size: 18px;
       transition: transform 0.5s ease;
     }
-    #themeIcon.rotate {
+
+    .theme-icon.rotate {
       transform: rotate(360deg);
     }
 
-    /* Input field dark mode styling */
-    .login-container input {
-      background-color: var(--field-bg);
-      color: var(--field-text);
-      border: 1px solid var(--line);
-      transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+    /* Info Side Gradient - FIXED: Now uses CSS variables */
+    .info-side {
+      background:
+        radial-gradient(900px 500px at -10% 115%, rgba(255,255,255,.15) 0%, transparent 60%),
+        linear-gradient(135deg, var(--info-side-gradient-start) 0%, var(--info-side-gradient-mid) 48%, var(--info-side-gradient-end) 100%);
+      transition: background 0.5s ease; /* FIXED: Added smooth transition */
     }
 
-    .login-container input::placeholder {
+    /* Logo Image - FIXED SIZE */
+    .info-side .logo-img {
+      height: 200px;
+      width: auto;
+      margin: 0 0 24px 0;
+      transition: opacity 0.3s ease;
+    }
+
+    /* Login Form Side - Match Register styling */
+    .login-form-side {
+      background: var(--bg-white);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 32px;
+      transition: background-color 0.3s ease;
+    }
+
+    body.dark-mode .login-form-side {
+      background: #1a1a1a !important;
+    }
+
+    /* Login Container - Match Register.php styling */
+    .login-container {
+      background: transparent;
+      box-shadow: none;
+      border-radius: 0;
+      width: 420px;
+      max-width: 90%;
+      padding: 0;
+      text-align: left;
+    }
+
+    /* Login Container */
+    .login-container h3 {
+      color: var(--field-text);
+      transition: color 0.3s ease;
+    }
+
+    /* FIX: "Welcome Back" text must be visible in dark mode */
+    .login-container small {
+      color: var(--muted) !important;
+      transition: color 0.3s ease;
+    }
+
+    /* Input Fields - Match Register.php styling */
+    .login-container input[type="email"],
+    .login-container input[type="password"],
+    .login-container input[type="text"] {
+      background-color: var(--field-bg);
+      border: none;
+      height: 52px;
+      border-radius: 999px;
+      padding: 12px 18px;
+      font-size: 15px;
+      color: var(--field-text);
+      box-shadow: 0 1px 0 rgba(0,0,0,0.02), 0 8px 24px rgba(18,38,63,0.03);
+      transition: all 0.3s ease;
+    }
+
+    .login-container input[type="email"]::placeholder,
+    .login-container input[type="password"]::placeholder,
+    .login-container input[type="text"]::placeholder {
       color: var(--muted);
       opacity: 0.7;
     }
 
-    body.dark-mode .login-container input {
-      background-color: var(--field-bg);
-      color: var(--field-text);
-      border-color: var(--line);
+    body.dark-mode .login-container input[type="email"]::placeholder,
+    body.dark-mode .login-container input[type="password"]::placeholder,
+    body.dark-mode .login-container input[type="text"]::placeholder {
+      color: #b0b0b0 !important;
+      opacity: 0.7;
     }
 
-    /* Dark mode email icon - use lighter color */
-    body.dark-mode .login-container input[type="email"]{
+    /* FIX: Email icon visible in BOTH light and dark mode */
+    .login-container input[type="email"] {
+      padding-left: 52px;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%2399A3AE' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='5' width='18' height='14' rx='2' ry='2'/%3E%3Cpolyline points='22,7 12,13 2,7'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: 18px center;
+      background-size: 18px 18px;
+    }
+
+    body.dark-mode .login-container input[type="email"] {
+      background-color: #2a2a2a !important;
+      color: #f1f1f1 !important;
       background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%23b0b0b0' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='5' width='18' height='14' rx='2' ry='2'/%3E%3Cpolyline points='22,7 12,13 2,7'/%3E%3C/svg%3E");
       background-repeat: no-repeat;
-      background-position: 18px 50%;
+      background-position: 18px center;
+      background-size: 18px 18px;
     }
 
-    body.dark-mode .login-container input::placeholder {
-      color: var(--muted);
+    /* Dark mode password fields */
+    body.dark-mode .login-container input[type="password"],
+    body.dark-mode .login-container input[type="text"] {
+      background-color: #2a2a2a !important;
+      color: #f1f1f1 !important;
     }
 
-    /* Dark mode for alert messages */
-    body.dark-mode .alert-danger {
-      background-color: rgba(244, 67, 54, 0.2);
-      color: #ef5350;
-      border-color: rgba(244, 67, 54, 0.3);
+    /* Password wrapper */
+    .password-wrapper {
+      position: relative;
     }
 
-    /* Toggle password icon dark mode */
+    .password-wrapper input[type="password"],
+    .password-wrapper input[type="text"] {
+      padding-left: 52px !important;
+      padding-right: 48px !important;
+    }
+
+    /* Password lock icon */
+    .password-wrapper::before {
+      content: "\f023";
+      font-family: "Font Awesome 6 Free";
+      font-weight: 900;
+      font-size: 16px;
+      color: #99A3AE;
+      position: absolute;
+      left: 18px;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    body.dark-mode .password-wrapper::before {
+      color: #b0b0b0;
+    }
+
     .toggle-password {
       position: absolute;
       right: 14px;
       top: 50%;
       transform: translateY(-50%);
-      color: var(--muted);
+      color: #99A3AE;
       cursor: pointer;
       z-index: 2;
       transition: color 0.3s ease;
     }
 
     body.dark-mode .toggle-password {
-      color: var(--muted);
+      color: #b0b0b0;
     }
 
-    .toggle-password:hover {
-      color: var(--teal-2);
+    body.dark-mode .login-container input:focus {
+      background-color: #333 !important;
+      color: #f1f1f1 !important;
+      box-shadow: 0 0 0 3px rgba(90, 208, 190, 0.25);
     }
 
-    body.dark-mode .toggle-password:hover {
-      color: var(--teal-1);
+    /* Alert - Dark Mode */
+    .login-container .alert {
+      transition: background-color 0.3s ease, color 0.3s ease;
     }
 
-    /* Dark mode for links */
+    body.dark-mode .login-container .alert {
+      background: rgba(244, 67, 54, 0.2);
+      color: #ef5350;
+    }
+
+    /* FIX: Links must be visible in dark mode */
+    .login-container a {
+      color: #7c8a99;
+      text-decoration: none;
+      transition: color 0.3s ease;
+    }
+
+    .login-container a:hover {
+      text-decoration: underline;
+    }
+
     body.dark-mode .login-container a {
-      color: #90caf9;
+      color: #90caf9 !important;
     }
 
     body.dark-mode .login-container a:hover {
-      color: #64b5f6;
+      color: #64b5f6 !important;
+    }
+
+    .login-container a.text-primary {
+      color: var(--teal-2) !important;
+      font-weight: 600;
     }
 
     body.dark-mode .login-container a.text-primary {
       color: var(--teal-1) !important;
     }
 
-    body.dark-mode .login-container h3 {
-      color: var(--field-text);
-    }
-
-    body.dark-mode .login-container small {
-      color: var(--muted);
-    }
-
-    /* Login container button styles */
+    /* Login Button with Gradient */
     .login-container button[type="submit"],
     .login-container .btn-primary {
+      background: linear-gradient(135deg, var(--btn-from) 0%, var(--btn-to) 100%) !important;
+      border: none !important;
+      height: 56px;
+      border-radius: 999px;
+      font-weight: 600;
+      font-size: 16px;
+      letter-spacing: .2px;
+      color: #fff !important;
+      width: 100%;
+      box-shadow: 0 10px 24px rgba(48,170,153,.35);
       transition: transform .15s ease, box-shadow .2s ease, opacity .2s ease;
     }
 
@@ -209,204 +328,13 @@ if (isset($_SESSION['user']))
     .password-wrapper input {
       padding-right: 48px;
     }
-
-    .info-side {
-      position: relative;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: flex-start;
-      text-align: left;
-      padding: 0 72px;
-      color: #fff;
-      background:
-        radial-gradient(900px 500px at -10% 115%, rgba(255,255,255,.15) 0%, transparent 60%),
-        linear-gradient(135deg, var(--info-side-gradient-start) 0%, var(--info-side-gradient-mid) 48%, var(--info-side-gradient-end) 100%);
-      border-right: 1px solid var(--line);
-      overflow: hidden;
-      transition: background 0.5s ease;
-    }
-
-    .info-side::before,
-    .info-side::after {
-      content: '';
-      position: absolute;
-      bottom: -180px;
-      left: -180px;
-      border-radius: 50%;
-      border: 1px solid rgba(255,255,255,.25);
-      pointer-events: none;
-    }
-    
-    .info-side::before {
-      width: 520px; 
-      height: 520px;
-    }
-    
-    .info-side::after {
-      width: 700px; 
-      height: 700px;
-      border-color: rgba(255,255,255,.15);
-    }
-
-    .info-side img {
-      height: 200px;
-      width: auto;
-      margin: 0 0 24px 0;
-      transition: opacity 0.3s ease;
-    }
-
-    .info-side h4 {
-      font-size: 40px;
-      line-height: 1.1;
-      font-weight: 700;
-      margin: 8px 0 10px;
-      color: #fff;
-    }
-
-    .info-side p {
-      font-size: 16px;
-      color: rgba(255,255,255,.9);
-      margin-bottom: 18px;
-    }
-
-    .info-side .text-muted {
-      color: rgba(255,255,255,.85) !important;
-      font-weight: 500;
-    }
-
-    .info-side a.btn-outline-primary {
-      background: rgba(255,255,255,.20);
-      color: #fff;
-      border: none;
-      padding: 12px 20px;
-      border-radius: 999px;
-      font-weight: 600;
-      box-shadow: inset 0 0 0 1px rgba(255,255,255,.25);
-      transition: transform .15s ease, background .2s ease;
-    }
-
-    .info-side a.btn-outline-primary:hover {
-      background: rgba(255,255,255,.28);
-      transform: translateY(-1px);
-    }
-
-    .login-form-side {
-      background: var(--bg-white);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 32px;
-      transition: background-color 0.3s ease;
-    }
-
-    .login-container {
-      background: transparent;
-      box-shadow: none;
-      border-radius: 0;
-      width: 420px;
-      max-width: 90%;
-      padding: 0;
-      text-align: left;
-    }
-
-    .login-container h3 {
-      font-size: 28px;
-      font-weight: 700;
-      color: var(--field-text);
-      margin-bottom: 6px;
-      transition: color 0.3s ease;
-    }
-
-    .login-container small {
-      color: var(--muted) !important;
-      transition: color 0.3s ease;
-    }
-
-    .login-container .alert {
-      border: none;
-      border-radius: 10px;
-      margin-bottom: 20px;
-      transition: background-color 0.3s ease, color 0.3s ease;
-    }
-
-    .login-container .alert-danger {
-      background: var(--alert-danger-bg);
-      color: var(--alert-danger-text);
-    }
-
-    .login-container .form-control {
-      background-color: var(--field-bg);
-      color: var(--field-text);
-      border: 2px solid transparent;
-      height: 52px;
-      border-radius: 999px;
-      padding: 12px 18px;
-      font-size: 15px;
-      box-shadow: 0 1px 0 rgba(0,0,0,0.02), 0 8px 24px rgba(18,38,63,0.03);
-      transition: all 0.3s ease;
-    }
-
-    .login-container .form-control:focus {
-      background-color: var(--field-bg);
-      color: var(--field-text);
-      border-color: var(--teal-2);
-      box-shadow: 0 0 0 3px rgba(90, 208, 190, 0.15);
-      outline: none;
-    }
-
-    body.dark-mode .login-container .form-control:focus {
-      background-color: #333;
-      box-shadow: 0 0 0 3px rgba(90, 208, 190, 0.25);
-    }
-
-    .login-container .btn-primary {
-      background: linear-gradient(135deg, var(--btn-from) 0%, var(--btn-to) 100%);
-      border: none;
-      height: 56px;
-      border-radius: 999px;
-      padding: 12px;
-      font-size: 16px;
-      font-weight: 600;
-      letter-spacing: .2px;
-      color: #fff;
-      box-shadow: 0 10px 24px rgba(48,170,153,.35);
-      transition: transform .15s ease, box-shadow .2s ease;
-    }
-
-    .login-container .btn-primary:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 12px 28px rgba(48,170,153,.42);
-    }
-
-    .login-container a {
-      color: var(--teal-2);
-      text-decoration: none;
-      font-size: 14px;
-      transition: color 0.2s ease;
-    }
-
-    .login-container a:hover {
-      color: var(--teal-1);
-      text-decoration: underline;
-    }
   </style>
 </head>
-<body class="login-page" id="loginBody">
+<body class="login-page">
   <!-- Dark Mode Toggle -->
   <button class="theme-toggle-btn" id="themeToggle">
-    <svg id="themeIcon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <circle cx="12" cy="12" r="5"></circle>
-      <line x1="12" y1="1" x2="12" y2="3"></line>
-      <line x1="12" y1="21" x2="12" y2="23"></line>
-      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-      <line x1="1" y1="12" x2="3" y2="12"></line>
-      <line x1="21" y1="12" x2="23" y2="12"></line>
-      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-    </svg>
-    <span id="themeLabel">Light Mode</span>
+    <span class="theme-icon" id="themeIcon">🌞</span>
+    <span id="themeLabel">Light</span>
   </button>
 
   <div class="container-fluid p-0">
@@ -414,9 +342,8 @@ if (isset($_SESSION['user']))
 
       <!-- Left Side: Logo + Pre-Assessment -->
       <div class="col-md-6 info-side">
-        <img src="images/MindCare.png" alt="MindCare Logo" class="img-fluid" id="logoImage" />
-        
-        <p class="text-muted fst-italic">Where healing meets understanding.</p>
+        <img src="images/MindCare.png" alt="MindCare Logo" class="img-fluid logo-img" id="logoImage" />
+        <p class="text-muted text-center fst-italic">Where healing meets understanding.</p>
         <p>Take a Quick Pre-Assessment</p>
         <a href="pre_assessment.php" class="btn btn-outline-primary">Start Here</a>
       </div>
@@ -429,7 +356,7 @@ if (isset($_SESSION['user']))
           <?php if (isset($_GET['error'])): ?>
             <div class="alert alert-danger"><?= htmlspecialchars($_GET['error']) ?></div>
           <?php endif; ?>
-          <form method="POST" action="login-handler.php" id="loginForm">
+          <form method="POST" action="login-handler.php">
             <input type="email" name="email" class="form-control mb-3" placeholder="Email" required>
             <div class="mb-3 password-wrapper">
               <input type="password" name="password" id="password" class="form-control" placeholder="Password" required>
@@ -453,10 +380,6 @@ if (isset($_SESSION['user']))
   </div>
 
   <script>
-    const sunIcon = '<circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>';
-    const moonIcon = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>';
-
-    // Password toggle function
     function togglePassword() {
       const passwordField = document.getElementById("password");
       const toggleIcon = document.getElementById("toggleIcon");
@@ -471,53 +394,11 @@ if (isset($_SESSION['user']))
       }
     }
 
-    // CRITICAL FIX: Prevent form from opening in new window
-    document.addEventListener('DOMContentLoaded', function() {
-      const loginForm = document.getElementById('loginForm');
-      
-      if (loginForm) {
-        // Remove any target attribute
-        loginForm.removeAttribute('target');
-        
-        // Intercept form submission
-        loginForm.addEventListener('submit', function(e) {
-          e.preventDefault(); // Stop default submission
-          
-          console.log('Form intercepted - submitting via JavaScript');
-          
-          // Submit the form programmatically in the same window
-          const formData = new FormData(this);
-          
-          fetch(this.action, {
-            method: 'POST',
-            body: formData
-          })
-          .then(response => {
-            // Get the redirect location from the response
-            if (response.redirected) {
-              // If PHP redirected, go to that URL in same window
-              window.location.href = response.url;
-            } else {
-              // If no redirect, reload to show error message
-              window.location.href = window.location.href;
-            }
-          })
-          .catch(error => {
-            console.error('Error:', error);
-            alert('Login failed. Please try again.');
-          });
-          
-          return false;
-        });
-      }
-    });
-
     // Dark Mode Toggle
     const themeToggle = document.getElementById('themeToggle');
     const themeIcon = document.getElementById('themeIcon');
     const themeLabel = document.getElementById('themeLabel');
     const logoImage = document.getElementById('logoImage');
-    const loginBody = document.getElementById('loginBody');
 
     // Function to update logo based on theme
     function updateLogo(isDark) {
@@ -531,16 +412,16 @@ if (isset($_SESSION['user']))
     // Check for saved theme preference
     const prefersDark = localStorage.getItem('dark-mode') === 'true';
     if (prefersDark) {
-      loginBody.classList.add('dark-mode');
-      themeIcon.innerHTML = moonIcon;
-      themeLabel.textContent = 'Dark Mode';
+      document.body.classList.add('dark-mode');
+      themeIcon.textContent = '🌙';
+      themeLabel.textContent = 'Dark';
       updateLogo(true);
     }
 
     // Toggle theme
     themeToggle.addEventListener('click', () => {
-      loginBody.classList.toggle('dark-mode');
-      const isDark = loginBody.classList.contains('dark-mode');
+      document.body.classList.toggle('dark-mode');
+      const isDark = document.body.classList.contains('dark-mode');
       localStorage.setItem('dark-mode', isDark);
       
       // Animate icon
@@ -548,9 +429,9 @@ if (isset($_SESSION['user']))
       setTimeout(() => themeIcon.classList.remove('rotate'), 500);
       
       // Update icon and label
-      themeIcon.innerHTML = isDark ? moonIcon : sunIcon;
-      themeLabel.textContent = isDark ? 'Dark Mode' : 'Light Mode';
-            
+      themeIcon.textContent = isDark ? '🌙' : '🌞';
+      themeLabel.textContent = isDark ? 'Dark' : 'Light';
+      
       // Update logo
       updateLogo(isDark);
     });
