@@ -717,18 +717,12 @@
   }
 }
 
-/* ================================================================
-   SMOOTH SCROLLING
-   ================================================================ */
 @media (prefers-reduced-motion: no-preference) {
   html {
     scroll-behavior: smooth;
   }
 }
 
-/* ================================================================
-   DARK MODE MOBILE ADJUSTMENTS
-   ================================================================ */
 @media (max-width: 768px) {
   body.dark-mode .mobile-menu-toggle {
     background: var(--primary-teal-dark);
