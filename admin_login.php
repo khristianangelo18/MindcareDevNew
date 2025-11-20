@@ -305,12 +305,50 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       box-shadow: 0 0 0 3px rgba(90, 208, 190, 0.25);
     }
 
+    /* Email input with icon */
+    .form-container input[type="email"] {
+      padding-left: 52px;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%2399A3AE' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='5' width='18' height='14' rx='2' ry='2'/%3E%3Cpolyline points='22,7 12,13 2,7'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: 18px center;
+      background-size: 18px 18px;
+    }
+
+    body.dark-mode .form-container input[type="email"] {
+      background-color: var(--field-bg);
+      color: var(--field-text);
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%23b0b0b0' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='5' width='18' height='14' rx='2' ry='2'/%3E%3Cpolyline points='22,7 12,13 2,7'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: 18px center;
+      background-size: 18px 18px;
+    }
+
     .password-wrapper {
       position: relative;
     }
 
     .password-wrapper input {
+      padding-left: 52px;
       padding-right: 48px;
+    }
+
+    /* Password lock icon */
+    .password-wrapper::before {
+      content: "\f023";
+      font-family: "Font Awesome 6 Free";
+      font-weight: 900;
+      font-size: 16px;
+      color: #99A3AE;
+      position: absolute;
+      left: 18px;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    body.dark-mode .password-wrapper::before {
+      color: #b0b0b0;
     }
 
     .toggle-password {

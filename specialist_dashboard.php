@@ -328,19 +328,33 @@ $stats = [
       background: var(--bg-light);
       transition: background-color 0.3s ease;
     }
+    .table thead th {
+      background: var(--card-bg);
+      color: var(--text-dark);
+      transition: background 0.3s ease, color 0.3s ease;
+    }
 
     .table th {
       padding: 1rem;
       text-align: left;
       font-size: 0.875rem;
       font-weight: 600;
-      color: var(--text-muted);
       text-transform: uppercase;
       letter-spacing: 0.5px;
       border-bottom: 2px solid var(--border-color);
       transition: all 0.3s ease;
     }
-
+    
+    .no-results-message {
+        text-align: center;
+        padding: 2rem;
+        color: var(--text-muted);
+        font-style: italic;
+        background: var(--bg-light);
+        border-radius: 8px;
+        margin-top: 1rem;
+        border: 1px solid var(--border-color);
+    }
     .table td {
       padding: 1rem;
       border-bottom: 1px solid var(--border-color);
@@ -435,6 +449,22 @@ $stats = [
       font-size: 0.8125rem;
     }
 
+    .form-control {
+      padding: 0.5rem;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      background: var(--card-bg);
+      color: var(--text-dark);
+      font-size: 0.875rem;
+      transition: all 0.3s ease;
+    }
+
+    .form-control:focus {
+      outline: none;
+      border-color: var(--primary-teal);
+      box-shadow: 0 0 0 3px rgba(90, 208, 190, 0.1);
+    }
+
     .alert {
       padding: 1rem;
       border-radius: 8px;
@@ -466,6 +496,14 @@ $stats = [
       align-items: center;
     }
 
+    .gap-2 {
+      gap: 0.5rem;
+    }
+
+    .mb-3 {
+      margin-bottom: 1rem;
+    }
+
     .table-responsive {
       overflow-x: auto;
     }
@@ -477,10 +515,72 @@ $stats = [
     small.text-muted {
       font-size: 0.875rem;
     }
+    
+    /* Styles for combining search and filter */
+    .filter-wrapper {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1rem;
+      align-items: center;
+      flex-wrap: wrap; 
+    }
+
+    .search-wrapper {
+      flex-grow: 1; 
+    }
+    
+    .search-input {
+      width: 100%;
+      max-width: 300px;
+      padding: 0.625rem 1rem;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      background: var(--card-bg);
+      color: var(--text-dark);
+      font-size: 0.875rem;
+      transition: all 0.3s ease;
+    }
+
+    .status-select {
+        padding: 0.625rem 1rem;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        background: var(--card-bg);
+        color: var(--text-dark);
+        font-size: 0.875rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        min-width: 150px;
+    }
+
+    .status-select:focus, .search-input:focus {
+      outline: none;
+      border-color: var(--primary-teal);
+      box-shadow: 0 0 0 3px rgba(90, 208, 190, 0.1);
+    }
+    /* End of search/filter styles */
+
+    /* NEW STYLES for Dashboard Header/Filter Alignment */
+    .dashboard-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem; /* Reduced to integrate better with the card padding */
+    }
+
+    .dashboard-card-header h5 {
+        margin: 0; /* Remove default margin from h5 */
+    }
+    
+    .dashboard-card-header .filter-controls {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
   </style>
 </head>
 <body>
-  <!-- Sidebar -->
   <div class="sidebar">
     <div class="logo-wrapper">
       <img src="images/Mindcare.png" alt="MindCare Logo" class="logo-img" />
@@ -507,8 +607,7 @@ $stats = [
           <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
           <line x1="1" y1="12" x2="3" y2="12"></line>
           <line x1="21" y1="12" x2="23" y2="12"></line>
-          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
         </svg>
         <span id="themeLabel">Light Mode</span>
       </button>
@@ -520,15 +619,12 @@ $stats = [
     </a>
   </div>
 
-  <!-- Main Content -->
   <div class="main-content">
-    <!-- Header -->
     <div class="dashboard-header">
       <h1>Welcome, <span class="user-name"><?= htmlspecialchars($specialist_name) ?></span></h1>
       <p class="date-time"><?= date('l, F j, Y') ?></p>
     </div>
 
-    <!-- Statistics Cards -->
     <div class="stats-grid">
       <div class="stat-card">
         <div class="card-title">Total Appointments</div>
@@ -548,19 +644,30 @@ $stats = [
       </div>
     </div>
 
-    <!-- Tab Navigation -->
     <div class="tab-navigation">
       <button class="tab-btn active" id="dashboardTab">Dashboard</button>
       <button class="tab-btn" id="bookingsTab">Booking Management</button>
     </div>
 
-    <!-- Dashboard Tab Content -->
     <div id="dashboardContent">
       <div class="card">
-        <h5 style="margin-bottom: 1.5rem;">Recent Bookings (Last 7 Days)</h5>
+        
+        <div class="dashboard-card-header">
+            <h5>Recent Bookings (Last 7 Days)</h5>
+            <div class="filter-controls">
+                <label for="recentStatusFilter" class="text-muted" style="margin: 0; font-weight: 600;">Filter Status:</label>
+                <select id="recentStatusFilter" class="status-select" onchange="filterRecentTable()" style="max-width: 150px;">
+                    <option value="">All Status</option>
+                    <option value="Pending">Pending</option>
+                    <option value="Confirmed">Confirmed</option>
+                    <option value="Completed">Completed</option>
+                    <option value="Cancelled">Cancelled</option>
+                </select>
+            </div>
+        </div>
         <?php if (!empty($recent_bookings)): ?>
           <div class="table-responsive">
-            <table class="table table-hover">
+            <table class="table table-hover" id="recentAppointmentsTable">
               <thead>
                 <tr>
                   <th>ID</th>
@@ -573,7 +680,7 @@ $stats = [
               </thead>
               <tbody>
                 <?php foreach ($recent_bookings as $row): ?>
-                  <tr>
+                  <tr data-status="<?= $row['status'] ?>">
                     <td><?= $row['id'] ?></td>
                     <td><?= htmlspecialchars($row['users']['fullname']) ?></td>
                     <td><?= date('M d, Y', strtotime($row['appointment_date'])) ?></td>
@@ -588,6 +695,7 @@ $stats = [
                 <?php endforeach; ?>
               </tbody>
             </table>
+            <div id="noRecentResults" class="no-results-message" style="display: none;">No recent appointments found matching the filter.</div>
           </div>
         <?php else: ?>
           <div class="alert alert-info">No recent bookings in the last 7 days.</div>
@@ -595,10 +703,9 @@ $stats = [
       </div>
     </div>
 
-    <!-- Booking Management Tab Content -->
     <div id="bookingsContent" style="display: none;">
       <div class="card">
-        <div class="d-flex justify-content-between align-items-center" style="margin-bottom: 1.5rem;">
+        <div class="d-flex justify-content-between align-items-center mb-3">
           <h5 style="margin: 0;">All Appointments</h5>
           <button class="btn btn-outline-primary btn-sm" onclick="window.location.reload()">
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 4px;"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
@@ -606,9 +713,29 @@ $stats = [
           </button>
         </div>
 
+        <div class="filter-wrapper">
+          <div class="search-wrapper">
+            <input 
+              type="text" 
+              id="searchInput" 
+              class="search-input" 
+              placeholder="Search by patient name, email, or date..." 
+              onkeyup="filterTable()"
+            />
+          </div>
+
+          <select id="statusFilter" class="status-select" onchange="filterTable()">
+            <option value="">All Status</option>
+            <option value="Pending">Pending</option>
+            <option value="Confirmed">Confirmed</option>
+            <option value="Completed">Completed</option>
+            <option value="Cancelled">Cancelled</option>
+          </select>
+        </div>
+
         <?php if (!empty($allAppointments)): ?>
           <div class="table-responsive">
-            <table class="table table-hover">
+            <table class="table table-hover" id="appointmentsTable">
               <thead>
                 <tr>
                   <th>ID</th>
@@ -617,7 +744,7 @@ $stats = [
                   <th>Date</th>
                   <th>Time</th>
                   <th>Notes</th>
-                  <th>Update Status</th>
+                  <th>Update Status</th> 
                 </tr>
               </thead>
               <tbody>
@@ -650,6 +777,7 @@ $stats = [
                 <?php endforeach; ?>
               </tbody>
             </table>
+            <div id="noResults" class="no-results-message" style="display: none;">No appointments found.</div>
           </div>
         <?php else: ?>
           <div class="alert alert-info">No appointments found. Patients can book appointments through the booking system.</div>
@@ -659,6 +787,7 @@ $stats = [
   </div>
 
   <script>
+    // Tab switching
     const dashboardTab = document.getElementById('dashboardTab');
     const bookingsTab = document.getElementById('bookingsTab');
     const dashboardContent = document.getElementById('dashboardContent');
@@ -677,6 +806,109 @@ $stats = [
       bookingsContent.style.display = 'block';
       dashboardContent.style.display = 'none';
     });
+
+    // --- DASHBOARD: Recent Bookings Filter Function ---
+    function filterRecentTable() {
+      const statusSelect = document.getElementById('recentStatusFilter');
+      const filterStatus = statusSelect.value;
+      const table = document.getElementById('recentAppointmentsTable');
+      const tbody = table ? table.getElementsByTagName('tbody')[0] : null;
+      const noResults = document.getElementById('noRecentResults');
+      
+      if (!tbody) return;
+
+      const rows = tbody.getElementsByTagName('tr');
+      let visibleRowCount = 0;
+
+      for (let i = 0; i < rows.length; i++) {
+        // Get the status from the data attribute set in PHP
+        const rowStatus = rows[i].getAttribute('data-status');
+        
+        const isVisible = (filterStatus === '' || rowStatus === filterStatus);
+
+        if (isVisible) {
+          rows[i].style.display = '';
+          visibleRowCount++;
+        } else {
+          rows[i].style.display = 'none';
+        }
+      }
+      
+      // Show/Hide "No Appointments Found" message
+      if (noResults) {
+          if (visibleRowCount === 0) {
+              noResults.style.display = 'block';
+              if (table) table.style.display = 'none';
+          } else {
+              noResults.style.display = 'none';
+              if (table) table.style.display = 'table';
+          }
+      }
+    }
+
+
+    // --- BOOKING MANAGEMENT: Search/Filter Function ---
+    function filterTable() {
+      const input = document.getElementById('searchInput');
+      const filterText = input.value.toLowerCase();
+      const statusSelect = document.getElementById('statusFilter');
+      const filterStatus = statusSelect.value;
+      
+      const table = document.getElementById('appointmentsTable');
+      const tbody = table ? table.getElementsByTagName('tbody')[0] : null;
+      const noResults = document.getElementById('noResults');
+      
+      if (!tbody) return;
+
+      const rows = tbody.getElementsByTagName('tr');
+      let visibleRowCount = 0;
+
+      for (let i = 0; i < rows.length; i++) {
+        const cells = rows[i].getElementsByTagName('td');
+        
+        // Data for text search
+        const patientName = cells[1]?.textContent || cells[1]?.innerText || '';
+        const email = cells[2]?.textContent || cells[2]?.innerText || '';
+        const date = cells[3]?.textContent || cells[3]?.innerText || '';
+        
+        // Data for status filter - Get the *current* status from the dropdown in the 'Update Status' cell (index 6)
+        const statusCell = cells[6];
+        const statusDropdown = statusCell ? statusCell.querySelector('select[name="status"]') : null;
+        const currentStatus = statusDropdown ? statusDropdown.value : '';
+
+
+        // 1. Check Text Filter
+        const textMatch = (patientName.toLowerCase().indexOf(filterText) > -1 ||
+                            email.toLowerCase().indexOf(filterText) > -1 ||
+                            date.toLowerCase().indexOf(filterText) > -1);
+                            
+        // 2. Check Status Filter
+        const statusMatch = (filterStatus === '' || currentStatus === filterStatus);
+        
+        // Show row if BOTH match
+        const isVisible = textMatch && statusMatch;
+
+        if (isVisible) {
+          rows[i].style.display = '';
+          visibleRowCount++;
+        } else {
+          rows[i].style.display = 'none';
+        }
+      }
+      
+      // Show/Hide "No Appointments Found" message
+      if (noResults) {
+          if (visibleRowCount === 0) {
+              noResults.style.display = 'block';
+              if (table) table.style.display = 'none';
+          } else {
+              noResults.style.display = 'none';
+              if (table) table.style.display = 'table';
+          }
+      }
+    }
+    // End of Booking Management Search/Filter
+
 
     // Dark Mode Toggle
     const themeToggle = document.getElementById('themeToggle');

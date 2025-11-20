@@ -5,10 +5,8 @@ if (!isset($_SESSION['user'])) {
   exit;
 }
 
-// CHANGE 1: Add Supabase connection
 include 'supabase.php';
 
-// CHANGE 2: Fetch fresh user data from database
 $user_id = $_SESSION['user']['id'];
 $users = supabaseSelect('users', ['id' => $user_id]);
 $user = !empty($users) ? $users[0] : null;
@@ -18,14 +16,12 @@ if (!$user) {
   exit;
 }
 
-// CHANGE 3: Update session with latest data
 $_SESSION['user'] = $user;
 
 // Keep original code
 $user_name = $user['fullname'] ?? 'User';
 $initials = strtoupper(substr($user_name, 0, 1) . (strpos($user_name, ' ') !== false ? substr($user_name, strpos($user_name, ' ') + 1, 1) : ''));
 
-// CHANGE 4: Fetch real appointment dates from database
 // Get last completed appointment
 $lastVisitQuery = supabaseSelect(
   'appointments',
@@ -210,6 +206,13 @@ if (!empty($upcomingQuery)) {
       color: var(--text-dark);
     }
 
+    /* NEW: Container for action buttons (Edit and Change Password) */
+    .profile-actions {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+    }
+
     .btn-edit {
       background: linear-gradient(135deg, var(--primary-teal), var(--primary-teal-dark));
       color: white;
@@ -231,6 +234,28 @@ if (!empty($upcomingQuery)) {
       transform: translateY(-2px);
       box-shadow: 0 6px 16px rgba(90, 208, 190, 0.4);
       color: white;
+    }
+    
+    /* NEW: Style for the Change Password button */
+    .btn-change-password {
+        background: transparent;
+        color: var(--primary-teal);
+        border: 1px solid var(--primary-teal);
+        padding: 0.65rem 1.5rem;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .btn-change-password:hover {
+        background: var(--primary-teal);
+        color: white;
     }
 
     .alert {
@@ -307,6 +332,12 @@ if (!empty($upcomingQuery)) {
       display: flex;
       align-items: center;
       gap: 0.25rem;
+    }
+
+    .contact-label svg {
+        color: var(--primary-teal);
+        width: 16px;
+        height: 16px;
     }
 
     .contact-value {
@@ -405,6 +436,12 @@ if (!empty($upcomingQuery)) {
       margin-bottom: 0.5rem;
     }
 
+    .appointment-label svg {
+        color: var(--primary-teal);
+        width: 18px;
+        height: 18px;
+    }
+
     .appointment-date {
       font-size: 1.1rem;
       font-weight: 600;
@@ -413,7 +450,6 @@ if (!empty($upcomingQuery)) {
   </style>
 </head>
 <body>
-  <!-- Sidebar -->
   <div class="sidebar">
     <div class="logo-wrapper">
       <img src="images/Mindcare.png" alt="MindCare Logo" class="logo-img" />
@@ -456,7 +492,6 @@ if (!empty($upcomingQuery)) {
     <div class="theme-toggle">
   <button id="themeToggle">
     <svg id="themeIcon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <!-- Sun icon (default for light mode) -->
       <circle cx="12" cy="12" r="5"></circle>
       <line x1="12" y1="1" x2="12" y2="3"></line>
       <line x1="12" y1="21" x2="12" y2="23"></line>
@@ -477,20 +512,23 @@ if (!empty($upcomingQuery)) {
     </a>
   </div>
 
-  <!-- Main Content -->
   <div class="main-wrapper">
     <div class="content-inner">
       
-      <!-- Header -->
       <div class="page-header">
         <h1>Profile</h1>
-        <a href="edit-profile.php" class="btn-edit">
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-          Edit
-        </a>
+        <div class="profile-actions">
+          <a href="change-password.php" class="btn-change-password">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+            Change Password
+          </a>
+          <a href="edit-profile.php" class="btn-edit">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+            Edit
+          </a>
+        </div>
       </div>
 
-      <!-- Success Alert -->
       <?php if (isset($_GET['success'])): ?>
         <div class="alert alert-success alert-dismissible fade show" role="alert">
           <?= htmlspecialchars($_GET['success']) ?>
@@ -498,7 +536,6 @@ if (!empty($upcomingQuery)) {
         </div>
       <?php endif; ?>
 
-      <!-- Profile Card -->
       <div class="profile-card">
         <div class="profile-header">
           <div class="avatar-circle"><?= $initials ?></div>
@@ -550,7 +587,6 @@ if (!empty($upcomingQuery)) {
         </div>
       </div>
 
-      <!-- Appointment Cards -->
       <div class="appointment-cards">
         <div class="appointment-card">
           <div class="appointment-label">
@@ -580,9 +616,7 @@ if (!empty($upcomingQuery)) {
         </div>
       </div>
 
-      <!-- Info Grid -->
       <div class="info-grid">
-        <!-- Personal Information -->
         <div class="info-section">
           <h5 class="section-title">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
@@ -630,7 +664,6 @@ if (!empty($upcomingQuery)) {
           </div>
         </div>
 
-        <!-- Emergency Contact -->
         <div class="info-section">
           <h5 class="section-title">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
@@ -672,7 +705,6 @@ if (!empty($upcomingQuery)) {
     </div>
   </div>
 
-  <!-- Scripts -->
   <script src="mobile.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script>

@@ -730,7 +730,7 @@ if (empty($specialists)) {
       transition: all 0.2s ease;
     }
 
-    .timeslot-btn:hover {
+    .timeslot-btn:hover:not(:disabled) {
       background: rgba(90, 208, 190, 0.3);
       color: white;
     }
@@ -741,13 +741,21 @@ if (empty($specialists)) {
       border-color: var(--primary-teal);
     }
 
+    .timeslot-btn:disabled {
+      background: rgba(128, 128, 128, 0.2);
+      color: var(--text-muted);
+      border: 1px solid var(--border-color);
+      cursor: not-allowed;
+      opacity: 0.5;
+    }
+
     body.dark-mode .timeslot-btn {
       background: rgba(90, 208, 190, 0.2);
       color: var(--primary-teal);
       border: 1px solid var(--primary-teal);
     }
 
-    body.dark-mode .timeslot-btn:hover {
+    body.dark-mode .timeslot-btn:hover:not(:disabled) {
       background: rgba(90, 208, 190, 0.3);
       color: white;
     }
@@ -756,6 +764,12 @@ if (empty($specialists)) {
       background: var(--primary-teal);
       color: white;
       border-color: var(--primary-teal);
+    }
+
+    body.dark-mode .timeslot-btn:disabled {
+      background: rgba(128, 128, 128, 0.15);
+      color: var(--text-muted);
+      border: 1px solid var(--border-color);
     }
     
     /* Submit Button */
@@ -1125,16 +1139,34 @@ icon.style.transition = 'transform 0.5s ease';
     let selectedSpecialistId = null;
     let selectedDate = null;
     let selectedTime = null;
+    let bookedAppointments = {}; // Will store booked time slots
 
     let currentMonth = new Date().getMonth();
     let currentYear = new Date().getFullYear();
 
     // ============================================
+    // FETCH BOOKED APPOINTMENTS FOR SPECIALIST
+    // ============================================
+    async function fetchBookedAppointments(specialistId) {
+      try {
+        const response = await fetch('get_booked_slots.php?specialist_id=' + specialistId);
+        const data = await response.json();
+        bookedAppointments = data; // Format: { "2025-11-25": ["09:00:00", "10:00:00"], ... }
+      } catch (error) {
+        console.error('Error fetching booked appointments:', error);
+        bookedAppointments = {};
+      }
+    }
+
+    // ============================================
     // VIEW SWITCHING
     // ============================================
-    function selectSpecialist(specialistId) {
+    async function selectSpecialist(specialistId) {
       selectedSpecialistId = specialistId;
       const specialist = specialistsData[specialistId];
+
+      // Fetch booked appointments for this specialist
+      await fetchBookedAppointments(specialistId);
 
       // Update specialist info in booking view
       document.getElementById('selectedSpecialistName').textContent = specialist.name;
@@ -1157,6 +1189,7 @@ icon.style.transition = 'transform 0.5s ease';
       selectedSpecialistId = null;
       selectedDate = null;
       selectedTime = null;
+      bookedAppointments = {};
       document.getElementById('bookBtn').disabled = true;
     }
 
@@ -1250,24 +1283,53 @@ icon.style.transition = 'transform 0.5s ease';
         return;
       }
 
+      // Get booked slots for the selected date
+      const bookedSlots = bookedAppointments[selectedDate] || [];
+
       let html = '<div class="day-timeslots">';
       html += `<div class="day-label">${dayName}</div>`;
       html += '<div class="timeslot-grid">';
 
-      availableSlots.forEach(time => {
-        html += `<button class="timeslot-btn" onclick="selectTime('${time}')">${time}</button>`;
+      availableSlots.forEach(timeRange => {
+        // Extract start time from range (e.g., "09:00 AM - 10:00 AM" -> "09:00:00")
+        const startTime = convertTo24Hour(timeRange.split(' - ')[0]);
+        
+        // Check if this time slot is already booked
+        const isBooked = bookedSlots.includes(startTime);
+        
+        if (isBooked) {
+          html += `<button class="timeslot-btn" disabled>${timeRange} (Booked)</button>`;
+        } else {
+          html += `<button class="timeslot-btn" onclick="selectTime('${timeRange}', '${startTime}')">${timeRange}</button>`;
+        }
       });
 
       html += '</div></div>';
       wrapper.innerHTML = html;
     }
 
-    function selectTime(time) {
-      selectedTime = time;
+    // Helper function to convert 12-hour time to 24-hour format
+    function convertTo24Hour(time12h) {
+      const [time, modifier] = time12h.split(' ');
+      let [hours, minutes] = time.split(':');
+      
+      if (hours === '12') {
+        hours = '00';
+      }
+      
+      if (modifier === 'PM') {
+        hours = parseInt(hours, 10) + 12;
+      }
+      
+      return `${String(hours).padStart(2, '0')}:${minutes}:00`;
+    }
+
+    function selectTime(timeRange, time24h) {
+      selectedTime = time24h;
       
       document.querySelectorAll('.timeslot-btn').forEach(btn => {
         btn.classList.remove('selected');
-        if (btn.textContent === time) {
+        if (btn.textContent === timeRange) {
           btn.classList.add('selected');
         }
       });

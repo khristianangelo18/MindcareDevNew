@@ -22,14 +22,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $emergency_contact_relationship = !empty($_POST['emergency_contact_relationship']) ? trim($_POST['emergency_contact_relationship']) : null;
   $emergency_contact_phone = !empty($_POST['emergency_contact_phone']) ? trim($_POST['emergency_contact_phone']) : null;
 
-  // Calculate BMI if height and weight are provided
   $bmi = null;
   if ($height && $weight) {
     $heightInMeters = $height / 100;
     $bmi = round($weight / ($heightInMeters * $heightInMeters), 2);
   }
 
-  // Update user profile using Supabase
   $updateData = [
     'fullname' => $fullname,
     'gender' => $gender,
@@ -45,11 +43,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     'emergency_contact_phone' => $emergency_contact_phone
   ];
 
-  // ✅ FIX 1: Correct parameter order
   $result = supabaseUpdate('users', ['id' => $user_id], $updateData);
 
   if (!isset($result['error'])) {
-    // Update session with all new data
     $_SESSION['user']['fullname'] = $fullname;
     $_SESSION['user']['gender'] = $gender;
     $_SESSION['user']['age'] = $age;
@@ -70,25 +66,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   }
 }
 
-// ✅ FIX 2: Fetch current user data with proper error handling
 $users = supabaseSelect('users', ['id' => $user_id], '*', null, 1, true);
 
-// Check if supabaseSelect returned valid data
 if (is_array($users) && !empty($users)) {
   $user = $users[0];
 } else {
-  // If database fetch fails, try to use session data as fallback
   $user = $_SESSION['user'] ?? null;
 }
 
-// If still no user data, logout
 if (!$user || !is_array($user)) {
   error_log("ERROR: Could not fetch user data for user_id: " . $user_id);
   header("Location: logout.php");
   exit;
 }
 
-// ✅ FIX 3: Ensure all expected keys exist with default values
 $user = array_merge([
   'id' => $user_id,
   'fullname' => '',
@@ -130,6 +121,7 @@ $user = array_merge([
       --sidebar-bg: #f5f6f7;
       --card-bg: #ffffff;
       --border-color: #e9edf5;
+      --input-text: #2b2f38; /* NEW: Input text color for light mode */
     }
 
     body {
@@ -147,6 +139,7 @@ $user = array_merge([
       --text-dark: #f1f1f1;
       --text-muted: #b0b0b0;
       --border-color: #3a3a3a;
+      --input-text: #f1f1f1; /* NEW: Input text color for dark mode */
     }
 
     .sidebar {
@@ -237,8 +230,8 @@ $user = array_merge([
     }
 
     .content-inner {
-  max-width: 1400px;
-}
+      max-width: 1400px;
+    }
 
     .page-header {
       margin-bottom: 2rem;
@@ -307,6 +300,7 @@ $user = array_merge([
       margin-left: 0.25rem;
     }
 
+    /* FIXED: Input and select text colors */
     .form-control,
     .form-select {
       width: 100%;
@@ -315,41 +309,22 @@ $user = array_merge([
       border-radius: 8px;
       font-size: 0.95rem;
       background: var(--bg-light);
-      color: var(--text-dark);
+      color: var(--input-text); /* Uses the color from CSS variables */
       transition: all 0.3s ease;
     }
 
+    /* FIXED: Placeholder colors */
     .form-control::placeholder,
-.form-select::placeholder {
-  color: #99A3AE;
-  opacity: 0.7;
-}
+    .form-select::placeholder {
+      color: var(--text-muted);
+      opacity: 0.7;
+    }
 
-/* Placeholder colors for dark mode */
-body.dark-mode .form-control::placeholder,
-body.dark-mode .form-select::placeholder {
-  color: #6b7280;
-  opacity: 0.8;
-}
-
-/* Specific styling for textarea placeholders */
-textarea.form-control::placeholder {
-  color: #99A3AE;
-  opacity: 0.7;
-}
-
-body.dark-mode textarea.form-control::placeholder {
-  color: #6b7280;
-  opacity: 0.8;
-}
-
-.form-control:focus,
-.form-select:focus {
-  outline: none;
-  border-color: var(--primary-teal);
-  box-shadow: 0 0 0 3px rgba(90, 208, 190, 0.1);
-  background: var(--card-bg);
-}
+    /* FIXED: Textarea placeholder */
+    textarea.form-control::placeholder {
+      color: var(--text-muted);
+      opacity: 0.7;
+    }
 
     .form-control:focus,
     .form-select:focus {
@@ -357,17 +332,27 @@ body.dark-mode textarea.form-control::placeholder {
       border-color: var(--primary-teal);
       box-shadow: 0 0 0 3px rgba(90, 208, 190, 0.1);
       background: var(--card-bg);
+      color: var(--input-text); /* Maintain text color on focus */
     }
 
+    /* FIXED: Dark mode specific styles */
     body.dark-mode .form-control,
     body.dark-mode .form-select {
       background: #1a1a1a;
       border-color: var(--border-color);
+      color: var(--input-text);
     }
 
     body.dark-mode .form-control:focus,
     body.dark-mode .form-select:focus {
       background: #2a2a2a;
+      color: var(--input-text);
+    }
+
+    /* FIXED: Select option colors in dark mode */
+    body.dark-mode .form-select option {
+      background: #2a2a2a;
+      color: #f1f1f1;
     }
 
     .button-group {
@@ -435,11 +420,10 @@ body.dark-mode textarea.form-control::placeholder {
         DASHBOARD
       </a>
       <a class="nav-link" href="resources.php">
-      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18"
-          viewBox="0 0 24 24" fill="none" stroke="currentColor"
-          stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/>
-      </svg>        RESOURCES
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/>
+        </svg>
+        RESOURCES
       </a>
       <a class="nav-link" href="assessment.php">
         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
@@ -463,26 +447,23 @@ body.dark-mode textarea.form-control::placeholder {
       </a>
     </nav>
 
-    <!-- Dark Mode Toggle -->
     <div class="theme-toggle">
-  <button id="themeToggle">
-    <svg id="themeIcon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <!-- Sun icon (default for light mode) -->
-      <circle cx="12" cy="12" r="5"></circle>
-      <line x1="12" y1="1" x2="12" y2="3"></line>
-      <line x1="12" y1="21" x2="12" y2="23"></line>
-      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-      <line x1="1" y1="12" x2="3" y2="12"></line>
-      <line x1="21" y1="12" x2="23" y2="12"></line>
-      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-    </svg>
-    <span id="themeLabel">Light Mode</span>
-  </button>
-</div>
+      <button id="themeToggle">
+        <svg id="themeIcon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="5"></circle>
+          <line x1="12" y1="1" x2="12" y2="3"></line>
+          <line x1="12" y1="21" x2="12" y2="23"></line>
+          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+          <line x1="1" y1="12" x2="3" y2="12"></line>
+          <line x1="21" y1="12" x2="23" y2="12"></line>
+          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+        </svg>
+        <span id="themeLabel">Light Mode</span>
+      </button>
+    </div>
 
-    <!-- Logout Button at Bottom -->
     <a href="logout.php" class="nav-link" style="margin-top: 1rem; color: #ef5350; border-top: 1px solid var(--border-color); padding-top: 1rem;">
       <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
       LOGOUT
@@ -493,13 +474,11 @@ body.dark-mode textarea.form-control::placeholder {
   <div class="main-wrapper">
     <div class="content-inner">
       
-      <!-- Header -->
       <div class="page-header">
         <h1>Edit Profile</h1>
         <p class="subtitle">Update your personal information</p>
       </div>
 
-      <!-- Error Alert -->
       <?php if (isset($error)): ?>
         <div class="alert alert-danger alert-dismissible fade show" role="alert">
           <?= htmlspecialchars($error) ?>
@@ -507,11 +486,9 @@ body.dark-mode textarea.form-control::placeholder {
         </div>
       <?php endif; ?>
 
-      <!-- Form Card -->
       <div class="form-card">
         <form method="POST">
           
-          <!-- Basic Information Section -->
           <div class="form-section-title">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
             Basic Information
@@ -562,7 +539,6 @@ body.dark-mode textarea.form-control::placeholder {
             </div>
           </div>
 
-          <!-- Contact Information Section -->
           <div class="form-section-title" style="margin-top: 2rem;">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
             Contact Information
@@ -595,7 +571,6 @@ body.dark-mode textarea.form-control::placeholder {
             ><?= htmlspecialchars($user['address'] ?? '') ?></textarea>
           </div>
 
-          <!-- Health Information Section -->
           <div class="form-section-title" style="margin-top: 2rem;">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg>
             Health Information
@@ -664,7 +639,6 @@ body.dark-mode textarea.form-control::placeholder {
           </div>
           <?php endif; ?>
 
-          <!-- Emergency Contact Section -->
           <div class="form-section-title" style="margin-top: 2rem;">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
             Emergency Contact
@@ -724,19 +698,16 @@ body.dark-mode textarea.form-control::placeholder {
     </div>
   </div>
 
-  <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script>
    const toggleBtn = document.getElementById('themeToggle');
 const icon = document.getElementById('themeIcon');
 const label = document.getElementById('themeLabel');
 
-// SVG icon strings
 const sunIcon = '<circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>';
 
 const moonIcon = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>';
 
-// Check for saved theme preference
 const prefersDark = localStorage.getItem('dark-mode') === 'true';
 if (prefersDark) {
   document.body.classList.add('dark-mode');
@@ -744,22 +715,18 @@ if (prefersDark) {
   label.textContent = 'Dark Mode';
 }
 
-// Toggle theme
 toggleBtn.addEventListener('click', () => {
   document.body.classList.toggle('dark-mode');
   const isDark = document.body.classList.contains('dark-mode');
   localStorage.setItem('dark-mode', isDark);
   
-  // Animate icon
   icon.style.transform = 'rotate(360deg)';
   setTimeout(() => icon.style.transform = 'rotate(0deg)', 500);
   
-  // Update icon and label
   icon.innerHTML = isDark ? moonIcon : sunIcon;
   label.textContent = isDark ? 'Dark Mode' : 'Light Mode';
 });
 
-// Smooth transition for icon
 icon.style.transition = 'transform 0.5s ease';
   </script>
 </body>

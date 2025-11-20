@@ -99,6 +99,9 @@ if (empty($appointments) || !isset($appointments[0]['users'])) {
 }
 // Filter appointments by status
 $upcomingAppointments = array_filter($appointments, function($apt) {
+  // We want to show ALL appointments from today onward for filtering, not just Confirmed/Pending
+  // The original prompt shows 'Upcoming Appointments' count, but the list should be filterable.
+  // We'll keep the list showing only Confirmed/Pending as per the original PHP code logic for the list variable name.
   return in_array($apt['status'], ['Confirmed', 'Pending']);
 });
 
@@ -412,8 +415,18 @@ $recommendations = [
     }
 
     .appointment-actions {
+        /* FIX: Ensure fixed width and alignment */
       display: flex;
+      justify-content: flex-end;
+      align-items: center;
       gap: 0.5rem;
+      flex-shrink: 0;
+      width: 320px; /* Adjust based on the max width needed for buttons + status badge */
+    }
+    
+    .appointment-actions > * {
+        min-width: 80px; /* Minimum width for alignment */
+        text-align: center;
     }
 
     .btn-sm {
@@ -421,12 +434,19 @@ $recommendations = [
       font-size: 0.875rem;
       border-radius: 6px;
     }
+    
+    .btn-outline-secondary, .btn-outline-primary {
+        min-width: 85px; /* Ensure buttons have consistent width */
+    }
+
 
     .status-badge {
       padding: 0.25rem 0.75rem;
       border-radius: 12px;
       font-size: 0.8rem;
       font-weight: 600;
+      min-width: 100px; /* FIXED WIDTH: Must be large enough for "Confirmed" and "Cancelled" */
+      text-align: center;
     }
 
     .status-confirmed {
@@ -462,6 +482,16 @@ $recommendations = [
       letter-spacing: 0.5px;
       border-bottom: 2px solid var(--border-color);
     }
+    
+    /* Assessment table column width FIXES: 
+       We must define explicit widths for columns containing fixed elements (Status and Action) */
+    .assessment-table th:nth-child(3) { /* Status column */
+        width: 120px; 
+    }
+    .assessment-table th:nth-child(5) { /* Action column (Print PDF) */
+        width: 170px; 
+        text-align: center;
+    }
 
     .assessment-table td {
       padding: 1rem;
@@ -469,6 +499,11 @@ $recommendations = [
       color: var(--text-dark);
       font-size: 0.9rem;
     }
+    
+    .assessment-table td:last-child {
+        text-align: center; /* Center the action button */
+    }
+
 
     .assessment-table tbody tr {
       transition: background-color 0.2s ease;
@@ -485,7 +520,15 @@ $recommendations = [
       border-radius: 6px;
       font-weight: 600;
       font-size: 0.85rem;
+      min-width: 80px; /* Ensure status badge is readable */
+      text-align: center;
     }
+    /* Enforce minimum width for score badges in assessment table */
+    .assessment-table .score-badge {
+        min-width: 90px; /* Adjusted to fit all statuses */
+        text-align: center;
+    }
+
 
     .score-badge.mild {
       background-color: #d4edda;
@@ -661,6 +704,69 @@ $recommendations = [
       border-color: var(--primary-teal-dark);
     }
 
+    /* NEW STYLES for Search and Filter containers */
+    .filter-wrapper {
+        display: flex;
+        justify-content: flex-end; 
+        gap: 1rem;
+        margin-bottom: 1rem;
+        align-items: center;
+        flex-wrap: wrap; 
+    }
+    
+    /* Assessment filter container uses the same class names as Appointments now for consistency */
+    .assessment-header-controls {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+        width: 100%;
+    }
+    
+    .filter-group { 
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        gap: 1rem;
+    }
+
+
+    .search-wrapper {
+        flex-grow: 0;
+        max-width: 300px; 
+    }
+
+    .search-input {
+        width: 100%;
+        padding: 0.625rem 1rem;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        background: var(--card-bg);
+        color: var(--text-dark);
+        font-size: 0.875rem;
+        transition: all 0.3s ease;
+    }
+
+    .status-select {
+        padding: 0.625rem 1rem;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        background: var(--card-bg);
+        color: var(--text-dark);
+        font-size: 0.875rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        min-width: 120px;
+    }
+
+    .search-input:focus, .status-select:focus {
+        outline: none;
+        border-color: var(--primary-teal);
+        box-shadow: 0 0 0 3px rgba(90, 208, 190, 0.1);
+    }
+    /* End NEW STYLES */
+
+
     /* Responsive */
     @media (max-width: 768px) {
       .sidebar {
@@ -674,11 +780,41 @@ $recommendations = [
       .main-content {
         margin-left: 0;
       }
+      
+      .appointment-item {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .appointment-actions {
+        margin-top: 1rem;
+        flex-wrap: wrap;
+        width: 100%; /* Take full width on mobile for better wrapping */
+        justify-content: space-between;
+      }
+      
+      .appointment-actions > * {
+          flex-grow: 1;
+      }
+      
+      /* Mobile adjustment for all filters */
+      .filter-wrapper,
+      .filter-group { 
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 0.5rem;
+      }
+      
+      .filter-wrapper .search-wrapper,
+      .filter-wrapper .status-select,
+      .filter-group .search-wrapper,
+      .filter-group .status-select {
+          max-width: 100%;
+          width: 100%;
+      }
     }
   </style>
 </head>
 <body>
-  <!-- Sidebar -->
   <div class="sidebar">
     <div class="logo-wrapper">
       <img src="images/Mindcare.png" alt="MindCare Logo" class="logo-img" />
@@ -719,11 +855,9 @@ $recommendations = [
       </a>
     </nav>
 
-    <!-- Dark Mode Toggle -->
     <div class="theme-toggle">
   <button id="themeToggle">
     <svg id="themeIcon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <!-- Sun icon (default for light mode) -->
       <circle cx="12" cy="12" r="5"></circle>
       <line x1="12" y1="1" x2="12" y2="3"></line>
       <line x1="12" y1="21" x2="12" y2="23"></line>
@@ -738,24 +872,19 @@ $recommendations = [
   </button>
 </div>
 
-    <!-- Logout Button at Bottom -->
     <a href="logout.php" class="nav-link" style="margin-top: 1rem; color: #ef5350; border-top: 1px solid var(--border-color); padding-top: 1rem;">
       <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
       LOGOUT
     </a>
   </div>
 
-  <!-- Main Content -->
   <div class="main-content">
-    <!-- Header -->
     <div class="dashboard-header">
       <h1><?= $greeting ?>, <span class="user-name"><?= htmlspecialchars($user_name) ?></span>!</h1>
       <div class="date-time">Today is <?= $current_date ?>, <?= $current_time ?></div>
     </div>
 
-    <!-- Summary Cards Row -->
     <div class="row">
-      <!-- Upcoming Appointments Card -->
       <div class="col-md-6">
         <div class="card">
           <div class="card-header-section">
@@ -773,7 +902,6 @@ $recommendations = [
       </div>
       
 
-      <!-- Quick Assessment Card -->
       <div class="col-md-6">
         <div class="card">
           <div class="card-header-section">
@@ -791,7 +919,6 @@ $recommendations = [
       </div>
     </div>
 
-    <!-- Tab Navigation and Filter Row -->
     <div class="d-flex justify-content-between align-items-center mb-3">
       <div class="tab-navigation">
         <button class="tab-btn active" id="appointmentsTab">Appointments</button>
@@ -800,10 +927,32 @@ $recommendations = [
 
     </div>
 
-    <!-- Content Sections -->
-     <div id="assessmentContent" style="display: none;">
+    <div id="assessmentContent" style="display: none;">
       <div class="card">
-        <h5 class="mb-3" style="color: var(--text-dark); transition: color 0.3s ease;">Your Assessment Records </h5>
+        
+        <div class="assessment-header-controls">
+            <h5 style="color: var(--text-dark); transition: color 0.3s ease; margin: 0;">Your Assessment Records</h5>
+            
+            <div class="filter-group">
+                 <div class="search-wrapper">
+                    <input 
+                      type="text" 
+                      id="assessmentSearchInput" 
+                      class="search-input" 
+                      placeholder="Search date or summary..." 
+                      onkeyup="filterAssessments()"
+                    />
+                  </div>
+                 <select id="assessmentStatusFilter" class="status-select" onchange="filterAssessments()" style="min-width: 150px;">
+                    <option value="">All Statuses</option>
+                    <option value="mild">Mild</option>
+                    <option value="moderate">Moderate</option>
+                    <option value="severe">Severe</option>
+                </select>
+            </div>
+        </div>
+
+
          <?php if (empty($assessmentsRecord)): ?>
         <div class="empty-state">
           <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
@@ -813,7 +962,7 @@ $recommendations = [
         </div>
       <?php else: ?>
         <div class="table-responsive">
-          <table class="assessment-table">
+          <table class="assessment-table" id="assessmentTable">
             <thead>
               <tr>
                 <th>Date</th>
@@ -824,9 +973,9 @@ $recommendations = [
               </tr>
             </thead>
             <tbody>
-              <?php foreach ($assessmentsRecord as $assessmentsRecord): ?>
+              <?php foreach ($assessmentsRecord as $record): ?>
                 <?php
-                  $score = $assessmentsRecord['score'];
+                  $score = $record['score'];
                   if ($score <= 2) {
                     $badgeClass = 'mild';
                     $statusText = 'Mild';
@@ -837,10 +986,10 @@ $recommendations = [
                     $badgeClass = 'severe';
                     $statusText = 'Severe';
                   }
-                  $date = date('M j, Y', strtotime($assessmentsRecord['created_at']));
-                  $time = date('g:i A', strtotime($assessmentsRecord['created_at']));
+                  $date = date('M j, Y', strtotime($record['created_at']));
+                  $time = date('g:i A', strtotime($record['created_at']));
                 ?>
-                <tr>
+                <tr data-status="<?= $badgeClass ?>" data-date-str="<?= strtolower($date) ?>" data-summary="<?= strtolower(htmlspecialchars($record['summary'] ?? '')) ?>">
                   <td>
                     <div style="font-weight: 600;"><?= $date ?></div>
                     <div style="font-size: 0.8rem; color: var(--text-muted);"><?= $time ?></div>
@@ -851,9 +1000,9 @@ $recommendations = [
                   <td>
                     <span class="score-badge <?= $badgeClass ?>"><?= $statusText ?></span>
                   </td>
-                  <td><?= htmlspecialchars($assessmentsRecord['summary'] ?? 'No summary') ?></td>
+                  <td><?= htmlspecialchars($record['summary'] ?? 'No summary') ?></td>
                   <td>
-                    <a href="generate_assessment_pdf.php?id=<?= $assessmentsRecord['id'] ?>" class="btn-print" target="_blank">
+                    <a href="generate_assessment_pdf.php?id=<?= $record['id'] ?>" class="btn-print" target="_blank">
                       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
                       Print PDF
                     </a>
@@ -862,6 +1011,7 @@ $recommendations = [
               <?php endforeach; ?>
             </tbody>
           </table>
+          <p id="noAssessmentFound" style="color: var(--text-muted); transition: color 0.3s ease; display: none;" class="text-center">No assessments found matching your filter.</p>
         </div>
       <?php endif; ?>
         
@@ -871,38 +1021,71 @@ $recommendations = [
 
     <div id="appointmentsContent">
       <div class="card">
-        <h5 class="mb-3" style="color: var(--text-dark); transition: color 0.3s ease;">Upcoming Appointments</h5>
+        
+        <div class="d-flex justify-content-between align-items-center mb-3">
+             <h5 style="color: var(--text-dark); transition: color 0.3s ease; margin: 0;">Upcoming Appointments</h5>
+            
+            <div class="filter-group">
+              <div class="search-wrapper">
+                <input 
+                  type="text" 
+                  id="appointmentSearchInput" 
+                  class="search-input" 
+                  placeholder="Search specialist or date..." 
+                  onkeyup="filterAppointments()"
+                />
+              </div>
+
+              <select id="appointmentStatusFilter" class="status-select" onchange="filterAppointments()">
+                <option value="">All Statuses</option>
+                <option value="Pending">Pending</option>
+                <option value="Confirmed">Confirmed</option>
+                <option value="Cancelled">Cancelled</option>
+              </select>
+            </div>
+        </div>
         <?php if (count($upcomingAppointments) > 0): ?>
-          <?php foreach ($upcomingAppointments as $apt): ?>
-            <div class="appointment-item">
-              <div class="appointment-info">
-                <h6><?= htmlspecialchars($apt['users']['fullname'] ?? 'Specialist') ?></h6>
-                <div class="appointment-meta">
-                  <span>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 4px;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                    <?= date('g:i A', strtotime($apt['appointment_time'])) ?>
-                  </span>
-                  <span>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 4px;"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-                    <?= date('F j, Y', strtotime($apt['appointment_date'])) ?>
-                  </span>
+          <div id="appointmentListContainer">
+            <?php foreach ($upcomingAppointments as $apt): ?>
+              <?php
+                // Format date for search/filter comparison
+                $formattedDate = date('M j, Y', strtotime($apt['appointment_date']));
+              ?>
+              <div 
+                class="appointment-item" 
+                data-specialist="<?= htmlspecialchars($apt['users']['fullname'] ?? 'Specialist') ?>"
+                data-date="<?= $formattedDate ?>"
+                data-status="<?= $apt['status'] ?>"
+              >
+                <div class="appointment-info">
+                  <h6><?= htmlspecialchars($apt['users']['fullname'] ?? 'Specialist') ?></h6>
+                  <div class="appointment-meta">
+                    <span>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 4px;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                      <?= date('g:i A', strtotime($apt['appointment_time'])) ?>
+                    </span>
+                    <span>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 4px;"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                      <?= $formattedDate ?>
+                    </span>
+                  </div>
+                </div>
+                <div class="appointment-actions">
+                  <button class="btn btn-sm btn-outline-secondary" onclick="rescheduleAppointment(<?= $apt['id'] ?>)">Reschedule</button>
+                  <button class="btn btn-sm btn-outline-primary" onclick="viewAppointmentDetails(<?= $apt['id'] ?>)">View Details</button>
+                  <span class="status-badge status-<?= strtolower($apt['status']) ?>"><?= $apt['status'] ?></span>
                 </div>
               </div>
-              <div class="appointment-actions">
-                <button class="btn btn-sm btn-outline-secondary" onclick="rescheduleAppointment(<?= $apt['id'] ?>)">Reschedule</button>
-                <button class="btn btn-sm btn-outline-primary" onclick="viewAppointmentDetails(<?= $apt['id'] ?>)">View Details</button>
-                <span class="status-badge status-<?= strtolower($apt['status']) ?>"><?= $apt['status'] ?></span>
-              </div>
-            </div>
-          <?php endforeach; ?>
+            <?php endforeach; ?>
+            <p id="noAppointmentsFound" style="color: var(--text-muted); transition: color 0.3s ease; display: none;" class="text-center">No appointments found matching your filter.</p>
+          </div>
         <?php else: ?>
-          <p style="color: var(--text-muted); transition: color 0.3s ease;" class="text-center">No upcoming appointments</p>
+          <p id="noAppointmentsFound" style="color: var(--text-muted); transition: color 0.3s ease;" class="text-center">No upcoming appointments</p>
         <?php endif; ?>
       </div>
     </div>
     
 
-  <!-- Scripts -->
   <script src="mobile.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script>
@@ -926,6 +1109,108 @@ $recommendations = [
       appointmentsContent.style.display = 'none';
       assessmentContent.style.display = 'block';
     })
+
+    // --- APPOINTMENTS FILTER FUNCTION ---
+    function filterAppointments() {
+        const input = document.getElementById('appointmentSearchInput');
+        const filterText = input.value.toLowerCase();
+        const statusSelect = document.getElementById('appointmentStatusFilter');
+        const filterStatus = statusSelect.value;
+        const container = document.getElementById('appointmentListContainer');
+        const noResultsMessage = document.getElementById('noAppointmentsFound');
+
+        // Check if container exists, if not, appointments are empty and we don't need to proceed
+        if (!container) return;
+
+        const appointmentItems = container.getElementsByClassName('appointment-item');
+        let visibleCount = 0;
+
+        for (let i = 0; i < appointmentItems.length; i++) {
+            const item = appointmentItems[i];
+            const specialistName = item.getAttribute('data-specialist').toLowerCase();
+            const appointmentDate = item.getAttribute('data-date').toLowerCase();
+            const currentStatus = item.getAttribute('data-status');
+
+            // 1. Check Text Filter (Specialist Name or Date)
+            const textMatch = (specialistName.includes(filterText) || appointmentDate.includes(filterText));
+            
+            // 2. Check Status Filter
+            const statusMatch = (filterStatus === '' || currentStatus === filterStatus);
+            
+            // Show row if BOTH match
+            const isVisible = textMatch && statusMatch;
+
+            if (isVisible) {
+                item.style.display = 'flex';
+                visibleCount++;
+            } else {
+                item.style.display = 'none';
+            }
+        }
+        
+        // Show/Hide "No Appointments Found" message
+        if (noResultsMessage) {
+            if (visibleCount === 0) {
+                noResultsMessage.style.display = 'block';
+            } else {
+                noResultsMessage.style.display = 'none';
+            }
+        }
+    }
+    // --- END APPOINTMENTS FILTER FUNCTION ---
+    
+    // --- ASSESSMENT FILTER FUNCTION ---
+    function filterAssessments() {
+        const searchInput = document.getElementById('assessmentSearchInput');
+        const filterText = searchInput.value.toLowerCase();
+        const statusSelect = document.getElementById('assessmentStatusFilter');
+        const filterStatus = statusSelect.value;
+        
+        const table = document.getElementById('assessmentTable');
+        const tbody = table ? table.getElementsByTagName('tbody')[0] : null;
+        const noResultsMessage = document.getElementById('noAssessmentFound');
+
+        if (!tbody) return;
+
+        const rows = tbody.getElementsByTagName('tr');
+        let visibleCount = 0;
+
+        for (let i = 0; i < rows.length; i++) {
+            const row = rows[i];
+            
+            const currentStatusClass = row.getAttribute('data-status');
+            const dateText = row.getAttribute('data-date-str');
+            const summaryText = row.getAttribute('data-summary');
+
+            // 1. Check Status Filter
+            const statusMatch = (filterStatus === '' || currentStatusClass === filterStatus);
+            
+            // 2. Check Text Filter (Date or Summary)
+            const textMatch = (filterText === '' || dateText.includes(filterText) || summaryText.includes(filterText));
+
+            // Show row if BOTH match
+            const isVisible = statusMatch && textMatch;
+            
+            if (isVisible) {
+                row.style.display = '';
+                visibleCount++;
+            } else {
+                row.style.display = 'none';
+            }
+        }
+        
+        if (noResultsMessage) {
+            if (visibleCount === 0) {
+                noResultsMessage.style.display = 'block';
+                if (table) table.style.display = 'none';
+            } else {
+                noResultsMessage.style.display = 'none';
+                if (table) table.style.display = 'table';
+            }
+        }
+    }
+    // --- END ASSESSMENT FILTER FUNCTION ---
+
 
     // Dark mode toggle
     const toggleBtn = document.getElementById('themeToggle');
@@ -1010,288 +1295,5 @@ icon.style.transition = 'transform 0.5s ease';
     rescheduleAppointment(appointmentId);
   }
   </script>
-     <?php include 'beyond_widget.php'; ?>
-
-     <!-- Appointment Details Modal -->
-<div class="modal fade" id="appointmentDetailsModal" tabindex="-1" aria-labelledby="appointmentDetailsModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered modal-lg">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="appointmentDetailsModalLabel">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 8px;">
-            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-            <line x1="16" y1="2" x2="16" y2="6"></line>
-            <line x1="8" y1="2" x2="8" y2="6"></line>
-            <line x1="3" y1="10" x2="21" y2="10"></line>
-          </svg>
-          Appointment Details
-        </h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <!-- Appointment ID -->
-        <div class="detail-row">
-          <div class="detail-label">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="10"></circle>
-              <line x1="12" y1="16" x2="12" y2="12"></line>
-              <line x1="12" y1="8" x2="12.01" y2="8"></line>
-            </svg>
-            Appointment ID
-          </div>
-          <div class="detail-value" id="modalAppointmentId">-</div>
-        </div>
-
-        <!-- Specialist Information -->
-        <div class="detail-section">
-          <h6 class="detail-section-title">Specialist Information</h6>
-          
-          <div class="detail-row">
-            <div class="detail-label">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                <circle cx="12" cy="7" r="4"></circle>
-              </svg>
-              Name
-            </div>
-            <div class="detail-value" id="modalSpecialistName">-</div>
-          </div>
-
-          <div class="detail-row">
-            <div class="detail-label">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                <circle cx="8.5" cy="7" r="4"></circle>
-                <polyline points="17 11 19 13 23 9"></polyline>
-              </svg>
-              Role
-            </div>
-            <div class="detail-value" id="modalSpecialistRole">-</div>
-          </div>
-
-          <div class="detail-row" id="modalSpecialistEmailRow" style="display: none;">
-            <div class="detail-label">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
-                <polyline points="22,6 12,13 2,6"></polyline>
-              </svg>
-              Email
-            </div>
-            <div class="detail-value" id="modalSpecialistEmail">-</div>
-          </div>
-        </div>
-
-        <!-- Appointment Information -->
-        <div class="detail-section">
-          <h6 class="detail-section-title">Appointment Information</h6>
-          
-          <div class="detail-row">
-            <div class="detail-label">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                <line x1="16" y1="2" x2="16" y2="6"></line>
-                <line x1="8" y1="2" x2="8" y2="6"></line>
-                <line x1="3" y1="10" x2="21" y2="10"></line>
-              </svg>
-              Date
-            </div>
-            <div class="detail-value" id="modalAppointmentDate">-</div>
-          </div>
-
-          <div class="detail-row">
-            <div class="detail-label">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="10"></circle>
-                <polyline points="12 6 12 12 16 14"></polyline>
-              </svg>
-              Time
-            </div>
-            <div class="detail-value" id="modalAppointmentTime">-</div>
-          </div>
-
-          <div class="detail-row">
-            <div class="detail-label">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
-              </svg>
-              Status
-            </div>
-            <span class="status-badge" id="modalAppointmentStatus">-</span>
-          </div>
-
-          
-
-          <div class="detail-row">
-            <div class="detail-label">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="10"></circle>
-                <polyline points="12 6 12 12 16 14"></polyline>
-              </svg>
-              Booked At
-            </div>
-            <div class="detail-value" id="modalCreatedAt">-</div>
-          </div>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-        <button type="button" class="btn btn-primary" onclick="rescheduleFromModal()">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 4px;">
-            <polyline points="23 4 23 10 17 10"></polyline>
-            <polyline points="1 20 1 14 7 14"></polyline>
-            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
-          </svg>
-          Reschedule
-        </button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<style>
-/* Modal Styling */
-.modal-content {
-  border-radius: 12px;
-  border: none;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
-}
-
-.modal-header {
-  background-color: var(--primary-teal);
-  color: white;
-  border-top-left-radius: 12px;
-  border-top-right-radius: 12px;
-  padding: 1.25rem 1.5rem;
-}
-
-.modal-header .btn-close {
-  filter: brightness(0) invert(1);
-  opacity: 0.8;
-}
-
-.modal-header .btn-close:hover {
-  opacity: 1;
-}
-
-.modal-title {
-  font-size: 1.25rem;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-}
-
-.modal-body {
-  padding: 1.5rem;
-}
-
-.detail-section {
-  margin-bottom: 1.5rem;
-}
-
-.detail-section:last-child {
-  margin-bottom: 0;
-}
-
-.detail-section-title {
-  font-size: 1rem;
-  font-weight: 600;
-  color: var(--primary-teal);
-  margin-bottom: 1rem;
-  padding-bottom: 0.5rem;
-  border-bottom: 2px solid var(--border-color);
-}
-
-.detail-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  padding: 0.75rem 0;
-  border-bottom: 1px solid var(--border-color);
-}
-
-.detail-row:last-child {
-  border-bottom: none;
-}
-
-.detail-label {
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: var(--text-muted);
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  flex: 0 0 40%;
-}
-
-.detail-label svg {
-  color: var(--primary-teal);
-  flex-shrink: 0;
-}
-
-.detail-value {
-  font-size: 0.9375rem;
-  font-weight: 500;
-  color: var(--text-dark);
-  text-align: right;
-  flex: 1;
-}
-
-.modal-footer {
-  padding: 1rem 1.5rem;
-  border-top: 1px solid var(--border-color);
-}
-
-/* Dark Mode Support */
-body.dark-mode .modal-content {
-  background-color: var(--card-bg);
-  color: var(--text-dark);
-}
-
-body.dark-mode .modal-header {
-  background-color: var(--primary-teal);
-}
-
-body.dark-mode .detail-section-title {
-  color: var(--primary-teal);
-  border-bottom-color: var(--border-color);
-}
-
-body.dark-mode .detail-row {
-  border-bottom-color: var(--border-color);
-}
-
-body.dark-mode .modal-footer {
-  border-top-color: var(--border-color);
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-  .detail-row {
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-
-  .detail-label {
-    flex: 1;
-  }
-
-  .detail-value {
-    text-align: left;
-  }
-}
-</style>
-
-<script>
-// Function to reschedule from modal
-function rescheduleFromModal() {
-  const appointmentId = document.getElementById('modalAppointmentId').textContent;
-  // Close modal
-  const modal = bootstrap.Modal.getInstance(document.getElementById('appointmentDetailsModal'));
-  modal.hide();
-  // Redirect to reschedule page
-  rescheduleAppointment(appointmentId);
-}
-</script>
-
 </body>
 </html>
