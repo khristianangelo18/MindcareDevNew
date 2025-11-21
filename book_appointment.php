@@ -19,6 +19,33 @@ if ($hour >= 5 && $hour < 12) {
 
 $current_date = date('l, F j, Y, g:i A');
 
+// --- NEW RESCHEDULE LOGIC START ---
+$appointment_id = $_GET['appointment_id'] ?? null;
+$is_rescheduling = false;
+$original_specialist_id = null;
+$user_id = $_SESSION['user']['id']; // Required for RLS checks if not bypassing
+
+if ($appointment_id) {
+    // Fetch the original appointment details to pre-select the specialist
+    $originalAppointment = supabaseSelect(
+        'appointments',
+        ['id' => $appointment_id, 'user_id' => $user_id], // Added user_id check for security
+        'specialist_id',
+        null,
+        1, 
+        true // Use SERVICE_KEY for fetch
+    );
+
+    if (!empty($originalAppointment)) {
+        $is_rescheduling = true;
+        $original_specialist_id = $originalAppointment[0]['specialist_id'];
+    } else {
+        $appointment_id = null;
+    }
+}
+// --- NEW RESCHEDULE LOGIC END ---
+
+
 // =========================================
 // DYNAMIC: Fetch specialists from Supabase
 // =========================================
@@ -34,12 +61,12 @@ $specialists = [];
 foreach ($specialistUsers as $specialist) {
   $specialists[$specialist['id']] = [
     'name' => $specialist['fullname'],
-    'role' => 'Psychologist', // Default role (can be extended later with a specialist_type field in DB)
-    'description' => 'Registered Psychologist', // Default description
-    'profile_pic' => 'images/Dr.Dela.jpg', // Use same default image for all
-    'location' => 'Metro Manila', // Default location
-    'experience' => '2 Years', // Default experience
-    'contact' => 'Contact via platform', // Default contact message
+    'role' => 'Psychologist',
+    'description' => 'Registered Psychologist',
+    'profile_pic' => 'images/Dr.Dela.jpg',
+    'location' => 'Metro Manila',
+    'experience' => '2 Years',
+    'contact' => 'Contact via platform',
     'availability' => [
       'Monday' => ['09:00 AM - 10:00 AM', '10:00 AM - 11:00 AM', '02:00 PM - 03:00 PM'],
       'Tuesday' => ['09:00 AM - 10:00 AM', '11:00 AM - 12:00 PM'],
@@ -50,7 +77,6 @@ foreach ($specialistUsers as $specialist) {
   ];
 }
 
-// If no specialists found, show message (fallback)
 if (empty($specialists)) {
   $specialists = [
     0 => [
@@ -71,10 +97,11 @@ if (empty($specialists)) {
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Book Appointment - MindCare</title>
+  <title><?= $is_rescheduling ? 'Reschedule Appointment' : 'Book Appointment' ?> - MindCare</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
   <link rel="stylesheet" href="mobile.css" />
   <style>
+    /* CSS STYLES OMITTED FOR BREVITY (Assumed to be correct) */
     * {
       margin: 0;
       padding: 0;
@@ -289,6 +316,12 @@ if (empty($specialists)) {
       overflow: hidden;
       min-height: 200px;
     }
+    
+    .specialist-card.reschedule-highlight {
+        border-color: var(--primary-teal-dark);
+        border-width: 2px;
+        background: rgba(90, 208, 190, 0.05);
+    }
 
     body.dark-mode .specialist-card {
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
@@ -487,13 +520,17 @@ if (empty($specialists)) {
       align-items: center;
       gap: 0.5rem;
     }
+    
+    .specialist-card.reschedule-highlight .btn-book-specialist {
+        background: #0d9488;
+    }
+
 
     .btn-book-specialist:hover {
       background: #148e7f;
       transform: translateY(-1px);
     }
 
-    /* Back Button */
     .back-button {
       background: var(--card-bg);
       color: var(--text-dark);
@@ -516,7 +553,6 @@ if (empty($specialists)) {
       border-color: var(--primary-teal);
     }
 
-    /* Selected Specialist Bar */
     .selected-specialist-bar {
       background: var(--card-bg);
       border: 1px solid var(--border-color);
@@ -554,7 +590,6 @@ if (empty($specialists)) {
       margin: 0;
     }
 
-    /* Calendar Section */
     .booking-section {
       display: grid;
       grid-template-columns: 400px 1fr;
@@ -686,7 +721,6 @@ if (empty($specialists)) {
       color: white;
     }
 
-    /* Time Slots */
     .timeslots-wrapper {
       background: var(--card-bg);
       border: 1px solid var(--border-color);
@@ -772,7 +806,6 @@ if (empty($specialists)) {
       border: 1px solid var(--border-color);
     }
     
-    /* Submit Button */
     .submit-wrapper {
       text-align: center;
       margin-top: 2rem;
@@ -790,11 +823,21 @@ if (empty($specialists)) {
       transition: all 0.3s ease;
       box-shadow: 0 4px 12px rgba(13, 148, 136, 0.3);
     }
+    
+    .btn-reschedule {
+        background: #f59e0b;
+        box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+    }
 
     .btn-book:hover {
       background: #0f766e;
       transform: translateY(-2px);
       box-shadow: 0 6px 16px rgba(13, 148, 136, 0.4);
+    }
+    
+    .btn-reschedule:hover {
+        background: #d97706; 
+        box-shadow: 0 6px 16px rgba(245, 158, 11, 0.4);
     }
 
     .btn-book:disabled {
@@ -804,7 +847,6 @@ if (empty($specialists)) {
       transform: none;
     }
 
-    /* Responsive Design */
     @media (max-width: 1024px) {
       .booking-section {
         grid-template-columns: 1fr;
@@ -856,14 +898,11 @@ if (empty($specialists)) {
   </style>
 </head>
 <body>
-  <!-- Sidebar -->
   <div class="sidebar">
-    <!-- Logo -->
     <div class="logo-wrapper">
       <img src="images/MindCare.png" alt="MindCare Logo" class="logo-img" />
     </div>
 
-    <!-- Navigation Links -->
     <nav>
       <a class="nav-link" href="dashboard.php">
         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"></rect><rect x="14" y="3" width="7" height="5"></rect><rect x="14" y="12" width="7" height="9"></rect><rect x="3" y="16" width="7" height="5"></rect></svg>
@@ -885,7 +924,7 @@ if (empty($specialists)) {
         BOOK APPOINTMENT
       </a>
       <a class="nav-link" href="appointments.php">
-        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><polyline points="17 11 19 13 23 9"></polyline></svg>
         MY APPOINTMENTS
       </a>
       <a class="nav-link" href="profile.php">
@@ -898,11 +937,9 @@ if (empty($specialists)) {
       </a>
     </nav>
 
-    <!-- Dark Mode Toggle -->
     <div class="theme-toggle">
   <button id="themeToggle">
     <svg id="themeIcon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <!-- Sun icon (default for light mode) -->
       <circle cx="12" cy="12" r="5"></circle>
       <line x1="12" y1="1" x2="12" y2="3"></line>
       <line x1="12" y1="21" x2="12" y2="23"></line>
@@ -917,23 +954,19 @@ if (empty($specialists)) {
   </button>
 </div>
 
-    <!-- Logout Button at Bottom -->
     <a href="logout.php" class="nav-link" style="margin-top: 1rem; color: #ef5350; border-top: 1px solid var(--border-color); padding-top: 1rem;">
       <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
       LOGOUT
     </a>
   </div>
 
-  <!-- Main Content -->
   <div class="main-wrapper">
     
-    <!-- FIXED: Header with consistent styles -->
     <div class="page-header">
       <h1><?= $greeting ?>, <span class="user-name"><?= htmlspecialchars($user_name) ?></span>!</h1>
       <p class="date-time">Today is <?= $current_date ?></p>
     </div>
 
-    <!-- Success Alert -->
     <?php if (isset($_GET['success'])): ?>
       <div class="alert alert-success alert-dismissible fade show" role="alert">
         <?= htmlspecialchars($_GET['success']) ?>
@@ -941,28 +974,26 @@ if (empty($specialists)) {
       </div>
     <?php endif; ?>
 
-    <!-- VIEW 1: Specialist Selection -->
     <div class="specialist-selection-view" id="specialistView">
-      <!-- Section Heading -->
-      <h2 class="section-heading">Book an <span class="highlight">Appointment</span></h2>
-      <p class="section-subtext">Please choose your preferred specialist below:</p>
+      <?php if ($is_rescheduling): ?>
+        <h2 class="section-heading">Reschedule <span class="highlight">Appointment #<?= $appointment_id ?></span></h2>
+        <p class="section-subtext">Select a specialist and a new date/time below. You may choose your original specialist or another one.</p>
+      <?php else: ?>
+        <h2 class="section-heading">Book an <span class="highlight">Appointment</span></h2>
+        <p class="section-subtext">Please choose your preferred specialist below:</p>
+      <?php endif; ?>
 
-      <!-- Specialist Cards Grid -->
       <div class="specialist-grid">
         <?php foreach ($specialists as $id => $specialist): ?>
           <?php
-            // Get next available appointment
             $days = array_keys($specialist['availability']);
             $nextDay = $days[0] ?? 'N/A';
             $nextTime = $specialist['availability'][$nextDay][0] ?? 'N/A';
-            
-            // Determine if available
             $isAvailable = !empty($specialist['availability']);
-            
-            // Default profile picture if not set
             $profilePic = $specialist['profile_pic'] ?? 'images/Dr.Dela.jpg';
+            $highlightClass = ($is_rescheduling && (int)$id === (int)$original_specialist_id) ? ' reschedule-highlight' : '';
           ?>
-          <div class="specialist-card" onclick="selectSpecialist(<?= $id ?>)">
+          <div class="specialist-card<?= $highlightClass ?>" onclick="selectSpecialist(<?= $id ?>)">
             <img src="<?= htmlspecialchars($profilePic) ?>" alt="<?= htmlspecialchars($specialist['name']) ?>" class="specialist-profile-pic" onerror="this.src='https://via.placeholder.com/200x200/5ad0be/ffffff?text=<?= substr($specialist['name'], 0, 1) ?>'">
             
             <div style="flex: 1; display: flex; flex-direction: column;">
@@ -983,7 +1014,6 @@ if (empty($specialists)) {
                     </div>
                     
                     <div class="specialist-details-grid">
-                      <!-- Left column: Description and Location -->
                       <div class="specialist-details-left">
                         <div class="specialist-role"><?= htmlspecialchars($specialist['description']) ?></div>
                         <div class="specialist-detail-item">
@@ -992,7 +1022,6 @@ if (empty($specialists)) {
                         </div>
                       </div>
                       
-                      <!-- Right column: Contact and Experience -->
                       <div class="specialist-details-right">
                         <div class="specialist-detail-item">
                           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
@@ -1016,7 +1045,7 @@ if (empty($specialists)) {
                 
                 <button class="btn-book-specialist" onclick="event.stopPropagation(); selectSpecialist(<?= $id ?>)">
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-                  Book Appointment
+                  <?= $is_rescheduling ? 'Select Specialist' : 'Book Appointment' ?>
                 </button>
               </div>
             </div>
@@ -1025,15 +1054,12 @@ if (empty($specialists)) {
       </div>
     </div>
 
-    <!-- VIEW 2: Booking Section (Calendar + Time Slots) -->
     <div class="booking-view" id="bookingView">
-      <!-- Back Button -->
       <button class="back-button" onclick="goBackToSpecialists()">
         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
         Back to Specialists
       </button>
 
-      <!-- Selected Specialist Info Bar -->
       <div class="selected-specialist-bar">
         <div class="selected-specialist-info">
           <img src="" alt="Specialist" id="selectedSpecialistAvatar" class="selected-specialist-avatar">
@@ -1044,9 +1070,7 @@ if (empty($specialists)) {
         </div>
       </div>
 
-      <!-- Booking Section: Calendar + Time Slots -->
       <div class="booking-section">
-        <!-- Calendar -->
         <div class="calendar-wrapper">
           <div class="calendar-header">
             <div class="calendar-month" id="calendarMonth">October 2025</div>
@@ -1075,83 +1099,83 @@ if (empty($specialists)) {
           <div class="calendar-grid" id="calendarDays"></div>
         </div>
 
-        <!-- Time Slots -->
         <div class="timeslots-wrapper" id="timeslotsWrapper">
           <p style="color: var(--text-muted); text-align: center;">Select a date to view available times</p>
         </div>
       </div>
 
-      <!-- Submit Button -->
       <div class="submit-wrapper">
-        <button class="btn-book" id="bookBtn" onclick="bookAppointment()" disabled>Book an Appointment</button>
+        <button 
+            class="btn-book <?= $is_rescheduling ? 'btn-reschedule' : '' ?>" 
+            id="bookBtn" 
+            onclick="bookAppointment()" 
+            disabled>
+            <?= $is_rescheduling ? 'Reschedule Appointment' : 'Book an Appointment' ?>
+        </button>
       </div>
     </div>
   </div>
 
-  <!-- JavaScript for Dark Mode, Calendar, and Booking Logic -->
-    <script src="mobile.js"></script>
+  <script src="mobile.js"></script>
 
   <script>
     // ============================================
-    // DARK MODE TOGGLE
+    // DARK MODE TOGGLE (Standard Logic)
     // ============================================
-    // Dark mode toggle with SVG icons
-const toggleBtn = document.getElementById('themeToggle');
-const icon = document.getElementById('themeIcon');
-const label = document.getElementById('themeLabel');
+    const toggleBtn = document.getElementById('themeToggle');
+    const icon = document.getElementById('themeIcon');
+    const label = document.getElementById('themeLabel');
 
-// SVG icon strings
-const sunIcon = '<circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>';
+    const sunIcon = '<circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>';
+    const moonIcon = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>';
 
-const moonIcon = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>';
+    const prefersDark = localStorage.getItem('dark-mode') === 'true';
+    if (prefersDark) {
+      document.body.classList.add('dark-mode');
+      icon.innerHTML = moonIcon;
+      label.textContent = 'Dark Mode';
+    }
 
-// Check for saved theme preference
-const prefersDark = localStorage.getItem('dark-mode') === 'true';
-if (prefersDark) {
-  document.body.classList.add('dark-mode');
-  icon.innerHTML = moonIcon;
-  label.textContent = 'Dark Mode';
-}
-
-// Toggle theme
-toggleBtn.addEventListener('click', () => {
-  document.body.classList.toggle('dark-mode');
-  const isDark = document.body.classList.contains('dark-mode');
-  localStorage.setItem('dark-mode', isDark);
-  
-  // Animate icon
-  icon.style.transform = 'rotate(360deg)';
-  setTimeout(() => icon.style.transform = 'rotate(0deg)', 500);
-  
-  // Update icon and label
-  icon.innerHTML = isDark ? moonIcon : sunIcon;
-  label.textContent = isDark ? 'Dark Mode' : 'Light Mode';
-});
-
-// Smooth transition for icon
-icon.style.transition = 'transform 0.5s ease';
+    toggleBtn.addEventListener('click', () => {
+      document.body.classList.toggle('dark-mode');
+      const isDark = document.body.classList.contains('dark-mode');
+      localStorage.setItem('dark-mode', isDark);
+      
+      icon.style.transform = 'rotate(360deg)';
+      setTimeout(() => icon.style.transform = 'rotate(0deg)', 500);
+      
+      icon.innerHTML = isDark ? moonIcon : sunIcon;
+      label.textContent = isDark ? 'Dark Mode' : 'Light Mode';
+    });
+    icon.style.transition = 'transform 0.5s ease';
 
     // ============================================
-    // SPECIALIST DATA (From PHP)
+    // GLOBAL STATE & DATA
     // ============================================
     const specialistsData = <?= json_encode($specialists) ?>;
+    const isRescheduling = <?= $is_rescheduling ? 'true' : 'false' ?>;
+    const rescheduleAppointmentId = '<?= $appointment_id ?>';
+    const originalSpecialistId = '<?= $original_specialist_id ?>';
 
     let selectedSpecialistId = null;
     let selectedDate = null;
     let selectedTime = null;
-    let bookedAppointments = {}; // Will store booked time slots
+    // bookedAppointments now stores an array of objects { time, id }
+    let bookedAppointments = {}; 
 
     let currentMonth = new Date().getMonth();
     let currentYear = new Date().getFullYear();
 
     // ============================================
-    // FETCH BOOKED APPOINTMENTS FOR SPECIALIST
+    // FETCH BOOKED APPOINTMENTS FOR SPECIALIST (Updated)
     // ============================================
     async function fetchBookedAppointments(specialistId) {
       try {
+        // Calls the new PHP file to get occupied slots
         const response = await fetch('get_booked_slots.php?specialist_id=' + specialistId);
         const data = await response.json();
-        bookedAppointments = data; // Format: { "2025-11-25": ["09:00:00", "10:00:00"], ... }
+        // data format: { "2025-11-25": [{time: "09:00:00", id: 10}, {time: "10:00:00", id: 18}], ... }
+        bookedAppointments = data; 
       } catch (error) {
         console.error('Error fetching booked appointments:', error);
         bookedAppointments = {};
@@ -1159,25 +1183,21 @@ icon.style.transition = 'transform 0.5s ease';
     }
 
     // ============================================
-    // VIEW SWITCHING
+    // VIEW SWITCHING (selectSpecialist)
     // ============================================
     async function selectSpecialist(specialistId) {
       selectedSpecialistId = specialistId;
       const specialist = specialistsData[specialistId];
 
-      // Fetch booked appointments for this specialist
       await fetchBookedAppointments(specialistId);
 
-      // Update specialist info in booking view
       document.getElementById('selectedSpecialistName').textContent = specialist.name;
       document.getElementById('selectedSpecialistRole').textContent = specialist.description;
       document.getElementById('selectedSpecialistAvatar').src = specialist.profile_pic;
 
-      // Switch views
       document.getElementById('specialistView').classList.add('hidden');
       document.getElementById('bookingView').classList.add('active');
 
-      // Render calendar
       renderCalendar();
     }
 
@@ -1185,16 +1205,22 @@ icon.style.transition = 'transform 0.5s ease';
       document.getElementById('bookingView').classList.remove('active');
       document.getElementById('specialistView').classList.remove('hidden');
       
-      // Reset selections
       selectedSpecialistId = null;
       selectedDate = null;
       selectedTime = null;
       bookedAppointments = {};
       document.getElementById('bookBtn').disabled = true;
     }
+    
+    // Auto-select specialist if rescheduling
+    if (isRescheduling && originalSpecialistId && specialistsData[originalSpecialistId]) {
+        setTimeout(() => {
+            selectSpecialist(originalSpecialistId);
+        }, 100);
+    }
 
     // ============================================
-    // CALENDAR RENDERING
+    // CALENDAR RENDERING (selectDate)
     // ============================================
     function renderCalendar() {
       const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
@@ -1207,18 +1233,14 @@ icon.style.transition = 'transform 0.5s ease';
       
       let calendarHTML = '';
       
-      // Empty cells before the first day
       for (let i = 0; i < firstDay; i++) {
         calendarHTML += '<div class="calendar-day empty"></div>';
       }
       
-      // Days of the month
       for (let day = 1; day <= daysInMonth; day++) {
         const date = new Date(currentYear, currentMonth, day);
-        const dayName = date.toLocaleDateString('en-US', { weekday: 'long' });
         const isWeekday = date.getDay() >= 1 && date.getDay() <= 5;
         
-        // Get today's date
         const now = new Date();
         const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
         const currentDate = new Date(currentYear, currentMonth, day);
@@ -1228,12 +1250,11 @@ icon.style.transition = 'transform 0.5s ease';
                         currentDate.getDate() === today.getDate());
         const isPast = currentDate < today;
         
-        // Highlight today even if it's disabled (weekend or past)
         if (isToday) {
           if (isWeekday && !isPast) {
             calendarHTML += `<div class="calendar-day today" onclick="selectDate(${day})">${day}</div>`;
           } else {
-            calendarHTML += `<div class="calendar-day disabled today">${day}</div>`;
+            calendarHTML += `<div class="calendar-day disabled today">${day}</div>`; 
           }
         } else if (isWeekday && !isPast) {
           calendarHTML += `<div class="calendar-day" onclick="selectDate(${day})">${day}</div>`;
@@ -1243,19 +1264,20 @@ icon.style.transition = 'transform 0.5s ease';
       }
       
       document.getElementById('calendarDays').innerHTML = calendarHTML;
+      document.getElementById('timeslotsWrapper').innerHTML = '<p style="color: var(--text-muted); text-align: center;">Select a date to view available times</p>';
     }
 
     function selectDate(day) {
       const date = new Date(currentYear, currentMonth, day);
       
-      // Prevent selecting dates that are not at least one day ahead
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       const tomorrow = new Date(today);
       tomorrow.setDate(tomorrow.getDate() + 1);
       date.setHours(0, 0, 0, 0);
-      if (date.getTime() < tomorrow.getTime()) {
-        return; // Don't allow today or past dates to be selected
+      
+      if (date.getTime() < tomorrow.getTime() && date.getTime() !== today.getTime()) {
+         return; 
       }
       
       const dayName = date.toLocaleDateString('en-US', { weekday: 'long' });
@@ -1266,13 +1288,18 @@ icon.style.transition = 'transform 0.5s ease';
         el.classList.remove('selected');
       });
       
-      event.target.classList.add('selected');
-      
+      if(event && event.target && !event.target.classList.contains('disabled')) {
+        event.target.classList.add('selected');
+      }
+
       renderTimeSlots(dayName);
       document.getElementById('bookBtn').disabled = true;
       selectedTime = null;
     }
 
+    // ============================================
+    // TIME SLOT RENDERING (Updated to check for booked slots)
+    // ============================================
     function renderTimeSlots(dayName) {
       const wrapper = document.getElementById('timeslotsWrapper');
       const specialist = specialistsData[selectedSpecialistId];
@@ -1283,22 +1310,44 @@ icon.style.transition = 'transform 0.5s ease';
         return;
       }
 
-      // Get booked slots for the selected date
+      // Get booked slots for the selected date (an array of {time, id} objects)
       const bookedSlots = bookedAppointments[selectedDate] || [];
+      
+      const now = new Date();
+      const todayDateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+      const isSelectedDateToday = selectedDate === todayDateStr;
 
       let html = '<div class="day-timeslots">';
       html += `<div class="day-label">${dayName}</div>`;
       html += '<div class="timeslot-grid">';
 
       availableSlots.forEach(timeRange => {
-        // Extract start time from range (e.g., "09:00 AM - 10:00 AM" -> "09:00:00")
-        const startTime = convertTo24Hour(timeRange.split(' - ')[0]);
+        const time12h = timeRange.split(' - ')[0];
+        const startTime = convertTo24Hour(time12h);
         
-        // Check if this time slot is already booked
-        const isBooked = bookedSlots.includes(startTime);
+        // Check if this time slot is booked by ANYONE
+        const bookedSlotInfo = bookedSlots.find(slot => slot.time === startTime);
+        const isBooked = !!bookedSlotInfo;
         
-        if (isBooked) {
-          html += `<button class="timeslot-btn" disabled>${timeRange} (Booked)</button>`;
+        // If rescheduling, check if this is the appointment currently being rescheduled
+        const isOwnAppointment = isRescheduling && bookedSlotInfo && bookedSlotInfo.id == rescheduleAppointmentId;
+
+        // Check if the time slot is in the past (only relevant for today's date)
+        let isPast = false;
+        if (isSelectedDateToday) {
+            const [hours, minutes] = startTime.split(':');
+            const slotTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), parseInt(hours), parseInt(minutes));
+            
+            isPast = now.getTime() > slotTime.getTime() + (60 * 1000); 
+        }
+
+        // Slot is disabled if it is booked by someone else OR if it is in the past
+        // Crucially: A user CAN select their own slot if rescheduling.
+        const isDisabled = (isBooked && !isOwnAppointment) || isPast;
+
+        if (isDisabled) {
+          const statusLabel = isPast ? '(Past)' : '(Booked)';
+          html += `<button class="timeslot-btn" disabled>${timeRange} ${statusLabel}</button>`;
         } else {
           html += `<button class="timeslot-btn" onclick="selectTime('${timeRange}', '${startTime}')">${timeRange}</button>`;
         }
@@ -1313,11 +1362,9 @@ icon.style.transition = 'transform 0.5s ease';
       const [time, modifier] = time12h.split(' ');
       let [hours, minutes] = time.split(':');
       
-      if (hours === '12') {
+      if (modifier === 'AM' && hours === '12') {
         hours = '00';
-      }
-      
-      if (modifier === 'PM') {
+      } else if (modifier === 'PM' && hours !== '12') {
         hours = parseInt(hours, 10) + 12;
       }
       
@@ -1329,7 +1376,7 @@ icon.style.transition = 'transform 0.5s ease';
       
       document.querySelectorAll('.timeslot-btn').forEach(btn => {
         btn.classList.remove('selected');
-        if (btn.textContent === timeRange) {
+        if (btn.textContent.trim().startsWith(timeRange)) {
           btn.classList.add('selected');
         }
       });
@@ -1338,13 +1385,19 @@ icon.style.transition = 'transform 0.5s ease';
     }
 
     function previousMonth() {
-      if (currentMonth === 0) {
-        currentMonth = 11;
-        currentYear--;
-      } else {
-        currentMonth--;
-      }
-      renderCalendar();
+        const tempDate = new Date(currentYear, currentMonth, 1);
+        const today = new Date();
+        if (tempDate.getMonth() <= today.getMonth() && tempDate.getFullYear() <= today.getFullYear()) {
+            return;
+        }
+        
+        if (currentMonth === 0) {
+            currentMonth = 11;
+            currentYear--;
+        } else {
+            currentMonth--;
+        }
+        renderCalendar();
     }
 
     function nextMonth() {
@@ -1358,7 +1411,7 @@ icon.style.transition = 'transform 0.5s ease';
     }
 
     // ============================================
-    // BOOK APPOINTMENT
+    // BOOK/RESCHEDULE APPOINTMENT
     // ============================================
     function bookAppointment() {
       if (!selectedSpecialistId || !selectedDate || !selectedTime) {
@@ -1366,16 +1419,24 @@ icon.style.transition = 'transform 0.5s ease';
         return;
       }
 
-      // Create form and submit
       const form = document.createElement('form');
       form.method = 'POST';
-      form.action = 'confirm_appointment.php';
+      
+      if (isRescheduling) {
+          form.action = 'reschedule_confirm.php'; 
+      } else {
+          form.action = 'confirm_appointment.php';
+      }
 
       const inputs = {
         specialist_id: selectedSpecialistId,
         appointment_date: selectedDate,
         appointment_time: selectedTime
       };
+      
+      if (isRescheduling) {
+          inputs.appointment_id = rescheduleAppointmentId;
+      }
 
       for (const [name, value] of Object.entries(inputs)) {
         const input = document.createElement('input');

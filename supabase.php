@@ -54,11 +54,11 @@ function supabaseSelect($table, $filters = [], $select = '*', $order = null, $li
         $url .= '&limit=' . $limit;
     }
     
-    // Use SERVICE_KEY to bypass RLS if needed (for authentication queries)
+    // Use SERVICE_KEY or public key based on bypass flag
     $authKey = ($bypassRLS && !empty(SUPABASE_SERVICE_KEY)) ? SUPABASE_SERVICE_KEY : SUPABASE_KEY;
     
     $headers = [
-        'apikey: ' . SUPABASE_KEY,
+        'apikey: ' . $authKey,
         'Authorization: Bearer ' . $authKey,
         'Content-Type: application/json'
     ];
@@ -105,7 +105,7 @@ function supabaseInsert($table, $data, $bypassRLS = true) {
     $authKey = ($bypassRLS && !empty(SUPABASE_SERVICE_KEY)) ? SUPABASE_SERVICE_KEY : SUPABASE_KEY;
     
     $headers = [
-        'apikey: ' . SUPABASE_KEY,
+        'apikey: ' . $authKey,
         'Authorization: Bearer ' . $authKey,
         'Content-Type: application/json',
         'Prefer: return=representation'
@@ -153,7 +153,7 @@ function supabaseUpdate($table, $filters, $data, $bypassRLS = true) {
     $authKey = ($bypassRLS && !empty(SUPABASE_SERVICE_KEY)) ? SUPABASE_SERVICE_KEY : SUPABASE_KEY;
     
     $headers = [
-        'apikey: ' . SUPABASE_KEY,
+        'apikey: ' . $authKey,
         'Authorization: Bearer ' . $authKey,
         'Content-Type: application/json',
         'Prefer: return=representation'
@@ -173,10 +173,20 @@ function supabaseUpdate($table, $filters, $data, $bypassRLS = true) {
     
     if ($httpCode >= 400) {
         error_log("Supabase Update Error on table '$table': " . $response);
-        return ['error' => true, 'message' => 'Update failed'];
+        return ['error' => true, 'message' => 'Update failed', 'details' => $response];
     }
     
-    return json_decode($response, true) ?: [];
+    // Check for HTTP 204 No Content (means update succeeded but no data was returned)
+    if ($httpCode === 204) {
+        // Return a basic success indicator since Prefer: return=representation might be ignored
+        return ['success' => true, 'http_code' => 204]; 
+    }
+    
+    // If successful and content returned (due to Prefer header)
+    $decoded = json_decode($response, true);
+    
+    // Since updates return an array containing the updated record(s), we return the first one
+    return (!empty($decoded) && is_array($decoded)) ? $decoded[0] : ['success' => true];
 }
 
 /**
@@ -201,7 +211,7 @@ function supabaseDelete($table, $filters, $bypassRLS = true) {
     $authKey = ($bypassRLS && !empty(SUPABASE_SERVICE_KEY)) ? SUPABASE_SERVICE_KEY : SUPABASE_KEY;
     
     $headers = [
-        'apikey: ' . SUPABASE_KEY,
+        'apikey: ' . $authKey,
         'Authorization: Bearer ' . $authKey,
         'Content-Type: application/json'
     ];

@@ -1,6 +1,6 @@
 <?php
 session_start();
-include 'supabase.php';
+include 'supabase.php'; // Ensure this file correctly implements supabaseSelect
 
 if (!isset($_SESSION['user'])) {
   header("Location: login.php");
@@ -13,6 +13,8 @@ $user_name = $_SESSION['user']['fullname'] ?? 'User';
 // FIX: Try multiple methods to fetch appointments with specialist info
 
 // Method 1: Try with PostgREST foreign key syntax (using constraint name)
+// NOTE: Using SERVICE_KEY to bypass Row Level Security (RLS) is generally a security risk 
+// if not managed carefully, but it's used here as per the original code's requirement.
 $appointments = supabaseSelect(
   'appointments',
   ['user_id' => $user_id],
@@ -39,9 +41,12 @@ if (empty($appointments) || !isset($appointments[0]['users'])) {
   $specialists = [];
   
   if (!empty($specialistIds)) {
+    // Escape IDs for the 'in' operator in SQL query
+    $in_ids = implode(',', array_map(function($id) { return (int)$id; }, $specialistIds));
+
     $allSpecialists = supabaseSelect(
       'users',
-      ['id' => ['operator' => 'in', 'value' => '(' . implode(',', $specialistIds) . ')']],
+      ['id' => ['operator' => 'in', 'value' => '(' . $in_ids . ')']],
       'id,fullname,email',
       null,
       null,
@@ -63,6 +68,13 @@ if (empty($appointments) || !isset($appointments[0]['users'])) {
     unset($apt);
   }
 }
+
+// --- ADDED: Session Message Display Logic ---
+$message = $_SESSION['message'] ?? null;
+$message_type = $_SESSION['message_type'] ?? null;
+unset($_SESSION['message']);
+unset($_SESSION['message_type']);
+// ---------------------------------------------
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -371,6 +383,18 @@ if (empty($appointments) || !isset($appointments[0]['users'])) {
       background: var(--bg-light);
       color: var(--text-dark);
     }
+    
+    /* ADDED: Styling for the new Cancel button */
+    .btn-danger {
+      background: #dc3545;
+      color: white;
+      /* Adjusted to only apply margin-left if needed by the PHP logic */
+    }
+
+    .btn-danger:hover {
+      background: #c82333;
+    }
+    /* END ADDED STYLING */
 
     .btn-sm {
       padding: 0.375rem 0.75rem;
@@ -382,6 +406,18 @@ if (empty($appointments) || !isset($appointments[0]['users'])) {
       padding: 1rem;
       border-radius: 8px;
       margin-bottom: 1rem;
+    }
+    
+    .alert-success {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+    
+    .alert-danger {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
     }
 
     .alert-info {
@@ -396,6 +432,15 @@ if (empty($appointments) || !isset($appointments[0]['users'])) {
     @media (max-width: 992px) {
       .main-content {
         /* mobile.css will apply the necessary top padding for the fixed mobile menu button */
+      }
+      
+      /* Mobile styling for action buttons */
+      .table td:last-child form {
+        display: inline-block; /* Ensure form is not full width */
+      }
+      .table td:last-child button {
+          margin-left: 0.25rem !important; /* Adjust spacing on mobile */
+          margin-top: 5px;
       }
     }
   </style>
@@ -466,7 +511,12 @@ if (empty($appointments) || !isset($appointments[0]['users'])) {
       <h1>My Appointments, <span class="user-name"><?= htmlspecialchars($user_name) ?></span></h1>
       <p class="date-time"><?= date('l, F j, Y') ?></p>
     </div>
-
+    
+    <?php if ($message): ?>
+        <div class="alert alert-<?= htmlspecialchars($message_type) ?>" role="alert">
+            <?= htmlspecialchars($message) ?>
+        </div>
+    <?php endif; ?>
     <div class="card">
       <div class="d-flex justify-content-between align-items-center mb-3">
         <h5 style="margin-bottom: 0;">Your Scheduled Appointments</h5>
@@ -501,9 +551,29 @@ if (empty($appointments) || !isset($appointments[0]['users'])) {
                       <?= $apt['status'] ?>
                     </span>
                   </td>
-                  <td>
-                    <?php if ($apt['status'] !== 'Cancelled' && $apt['status'] !== 'Completed'): ?>
-                      <button class="btn btn-outline-secondary btn-sm">Reschedule</button>
+                  <td data-label="Actions">
+                    <?php 
+                    // Set variables for action availability
+                    $isReschedulable = ($apt['status'] === 'Pending' || $apt['status'] === 'Confirmed');
+                    $isCancelable = ($apt['status'] === 'Pending' || $apt['status'] === 'Confirmed');
+                    ?>
+                    
+                    <?php if ($isReschedulable): ?>
+                      <form method="GET" action="book_appointment.php" style="display:inline-block;">
+                        <input type="hidden" name="appointment_id" value="<?= $apt['id'] ?>">
+                        <button type="submit" class="btn btn-outline-secondary btn-sm">Reschedule</button>
+                      </form>
+                    <?php endif; ?>
+                      
+                    <?php if ($isCancelable): ?>
+                      <form id="cancelForm_<?= $apt['id'] ?>" method="POST" action="cancel_appointment.php" style="display:inline-block; <?= $isReschedulable ? 'margin-left: 0.5rem;' : '' ?>">
+                        <input type="hidden" name="appointment_id" value="<?= $apt['id'] ?>">
+                        <input type="hidden" name="cancellation_reason" id="reason_<?= $apt['id'] ?>" value=""> 
+                        
+                        <button type="button" class="btn btn-danger btn-sm" onclick="promptForCancellation(<?= $apt['id'] ?>)">Cancel</button>
+                      </form>
+                    <?php else: ?>
+                      <span class="text-muted small">No action available</span>
                     <?php endif; ?>
                   </td>
                 </tr>
@@ -527,8 +597,6 @@ if (empty($appointments) || !isset($appointments[0]['users'])) {
     const toggleBtn = document.getElementById('themeToggle');
     const icon = document.getElementById('themeIcon');
     const label = document.getElementById('themeLabel');
-    // Removed: const sidebar = document.getElementById('sidebar');
-    // Removed: const menuToggle = document.getElementById('menuToggle'); 
 
     // SVG icon strings
     const sunIcon = '<circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>';
@@ -560,8 +628,39 @@ if (empty($appointments) || !isset($appointments[0]['users'])) {
     // Smooth transition for icon
     icon.style.transition = 'transform 0.5s ease';
     
-    // REMOVED: Custom toggle logic. mobile.js handles showing/hiding the sidebar.
-    // The link click logic is already inside mobile.js.
+
+    // NEW JAVASCRIPT FUNCTION FOR CANCELLATION REASON
+    function promptForCancellation(appointmentId) {
+        // 1. Confirmation Prompt
+        if (!confirm('Are you sure you want to cancel appointment #' + appointmentId + '? This action cannot be undone.')) {
+            return; 
+        }
+        
+        // 2. Reason Input Prompt
+        let reason = prompt('Please briefly state the reason for cancellation (Required):');
+        
+        // Loop until a reason is provided or the user hits Cancel
+        while (reason !== null && reason.trim() === '') {
+            reason = prompt('Reason is required to cancel the appointment. Please enter a reason:');
+        }
+
+        // 3. Process Submission
+        if (reason !== null) {
+            // If reason is provided, update the hidden field and submit the form
+            const reasonInput = document.getElementById('reason_' + appointmentId);
+            const form = document.getElementById('cancelForm_' + appointmentId);
+            
+            if (reasonInput && form) {
+                reasonInput.value = "CLIENT CANCELLATION: " + reason.trim();
+                form.submit();
+            } else {
+                alert("Error: Could not find the form elements for submission.");
+            }
+        } else {
+            // User clicked Cancel on the Reason prompt
+            alert('Cancellation process stopped by user.');
+        }
+    }
   </script>
 </body>
 </html>

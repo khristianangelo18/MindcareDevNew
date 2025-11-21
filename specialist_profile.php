@@ -1,24 +1,18 @@
 <?php
 session_start();
 if (!isset($_SESSION['user'])) {
-  // Assuming the specialist is accessing their own profile or an admin is viewing it
-  // For a specialist view, we'll keep the session check simple for now.
   header("Location: login.php");
   exit;
 }
 
 include 'supabase.php';
 
-// In a real application, the ID might come from a query string (e.g., ?id=X)
-// but for now, we assume the logged-in user is the specialist viewing their profile.
 $specialist_id = $_SESSION['user']['id']; 
 
-// Fetch the specialist's data from the users table
 $specialists = supabaseSelect('users', ['id' => $specialist_id, 'role' => 'Specialist']);
 $specialist = !empty($specialists) ? $specialists[0] : null;
 
 if (!$specialist) {
-  // If user is not found or not a specialist, redirect
   header("Location: logout.php");
   exit;
 }
@@ -74,7 +68,7 @@ if (!empty($upcomingQuery)) {
   <link rel="stylesheet" href="mobile.css" />
   <style>
     /* ------------------------------------- */
-    /* CSS STYLES (Copied from profile.php)  */
+    /* CSS STYLES (Fixed Centering)          */
     /* ------------------------------------- */
     * {
       margin: 0;
@@ -144,7 +138,6 @@ if (!empty($upcomingQuery)) {
       gap: 0.5rem;
       font-weight: 500;
       font-size: 0.625rem;
-      text-decoration: none;
       text-transform: uppercase;
       letter-spacing: 0.5px;
       transition: all 0.3s ease;
@@ -191,15 +184,20 @@ if (!empty($upcomingQuery)) {
       color: var(--primary-teal);
     }
 
+    /* FIX: Centering and Max-Width */
     .main-wrapper {
       margin-left: 250px;
       padding: 2rem;
       min-height: 100vh;
       transition: margin-left 0.3s ease; 
+      display: flex; 
+      justify-content: center; 
+      align-items: flex-start; 
     }
 
     .content-inner {
-      max-width: 1200px;
+      max-width: 1200px; /* Control max content width */
+      width: 100%; 
     }
 
     .page-header {
@@ -743,50 +741,57 @@ if (!empty($upcomingQuery)) {
   <script src="mobile.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script>
- // Dark mode toggle with SVG icons
-const toggleBtn = document.getElementById('themeToggle');
-const icon = document.getElementById('themeIcon');
-const label = document.getElementById('themeLabel');
+    // --- UNIFIED THEME LOGIC START ---
+    const THEME_KEY = 'dark-mode'; // Reverting key to match system standard (login.php, register.php)
+    const DARK_CLASS = 'dark-mode'; 
+    
+    const toggleBtn = document.getElementById('themeToggle');
+    const icon = document.getElementById('themeIcon');
+    const label = document.getElementById('themeLabel');
+    const body = document.body;
 
-// SVG icon strings
-const sunIcon = '<circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>';
+    const sunIcon = '<circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>';
+    const moonIcon = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>';
 
-const moonIcon = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>';
+    function applyTheme(isDark) {
+        if (isDark) {
+            body.classList.add(DARK_CLASS);
+            label.textContent = 'Dark Mode';
+            icon.innerHTML = moonIcon;
+            localStorage.setItem(THEME_KEY, 'true'); // Store 'true' for dark mode
+        } else {
+            body.classList.remove(DARK_CLASS);
+            label.textContent = 'Light Mode';
+            icon.innerHTML = sunIcon;
+            localStorage.setItem(THEME_KEY, 'false'); // Store 'false' for light mode
+        }
+    }
+    
+    // Initialize theme state on load
+    function initializeTheme() {
+        const currentThemeIsDark = localStorage.getItem(THEME_KEY) === 'true'; 
+        applyTheme(currentThemeIsDark);
+    }
 
-// Check for saved theme preference
-const prefersDark = localStorage.getItem('dark-mode') === 'true';
-if (prefersDark) {
-  document.body.classList.add('dark-mode');
-  icon.innerHTML = moonIcon;
-  label.textContent = 'Dark Mode';
-}
+    toggleBtn.addEventListener('click', () => {
+        const isDark = !body.classList.contains(DARK_CLASS);
+        applyTheme(isDark);
+        
+        icon.style.transform = 'rotate(360deg)';
+        setTimeout(() => icon.style.transform = 'rotate(0deg)', 500);
+    });
 
-// Toggle theme
-toggleBtn.addEventListener('click', () => {
-  document.body.classList.toggle('dark-mode');
-  const isDark = document.body.classList.contains('dark-mode');
-  localStorage.setItem('dark-mode', isDark);
-  
-  // Animate icon
-  icon.style.transform = 'rotate(360deg)';
-  setTimeout(() => icon.style.transform = 'rotate(0deg)', 500);
-  
-  // Update icon and label
-  icon.innerHTML = isDark ? moonIcon : sunIcon;
-  label.textContent = isDark ? 'Dark Mode' : 'Light Mode';
-});
+    document.addEventListener('DOMContentLoaded', initializeTheme);
+    icon.style.transition = 'transform 0.5s ease';
 
-// Smooth transition for icon
-icon.style.transition = 'transform 0.5s ease';
+    // --- MOBILE MENU TOGGLE LOGIC ---
+    const menuToggle = document.getElementById('menuToggle');
+    const sidebar = document.getElementById('sidebar');
 
-// --- MOBILE MENU TOGGLE LOGIC ---
-const menuToggle = document.getElementById('menuToggle');
-const sidebar = document.getElementById('sidebar');
-
-// Toggle sidebar visibility and add overlay effect
-menuToggle.addEventListener('click', () => {
-    sidebar.classList.toggle('show');
-});
+    menuToggle.addEventListener('click', () => {
+        sidebar.classList.toggle('show');
+    });
+    // --- UNIFIED THEME LOGIC END ---
   </script>
 </body>
 </html>

@@ -489,7 +489,7 @@ $stats = [
     .alert-info {
       background: #e7f3ff;
       color: #004085;
-      border: 1px solid #b8daff;
+      border: 1px solid var(--border-color);
     }
 
     body.dark-mode .alert-info {
@@ -591,6 +591,30 @@ $stats = [
         align-items: center;
         gap: 0.5rem;
     }
+    
+    /* === FIX: Notes Column Width & Header Styling === */
+    /* Target the 6th column (Notes) in the All Appointments table */
+    #appointmentsTable th:nth-child(6),
+    #appointmentsTable td:nth-child(6) {
+        width: 280px; /* Setting a minimum width to push Update Status */
+        min-width: 280px; 
+        max-width: 280px;
+        white-space: normal; /* Allow text wrapping */
+        word-wrap: break-word; /* Ensure wrapping works */
+        overflow: hidden; 
+        text-overflow: ellipsis; 
+    }
+    
+    /* Style for the header subtext */
+    .cancel-note-style {
+        color: #dc3545; /* Red color for stand-out */
+        font-style: italic;
+        font-weight: 500;
+        text-transform: none; /* Keep text case natural */
+        letter-spacing: 0;
+        font-size: 0.8rem; /* Smaller size to fit next to main text */
+    }
+
 
     /* === MOBILE RESPONSIVENESS ADDITIONS === */
 
@@ -712,8 +736,8 @@ $stats = [
         #appointmentsTable td:nth-child(3):before { content: "Email"; }
         #appointmentsTable td:nth-child(4):before { content: "Date"; }
         #appointmentsTable td:nth-child(5):before { content: "Time"; }
-        /* NOTE: The 'Notes' column was removed, so shift subsequent labels up */
-        #appointmentsTable td:nth-child(6):before { content: "Status Update"; } 
+        #appointmentsTable td:nth-child(6):before { content: "Notes"; }
+        #appointmentsTable td:nth-child(7):before { content: "Status Update"; }
         
         #recentAppointmentsTable td:nth-child(1):before { content: "ID"; }
         #recentAppointmentsTable td:nth-child(2):before { content: "Patient"; }
@@ -727,17 +751,26 @@ $stats = [
         }
         
         /* Ensure update form elements stack nicely */
-        .table td:nth-child(6) form { /* Now the 6th cell */
+        .table td:nth-child(7) form {
             flex-direction: column;
             align-items: stretch;
             width: 100%;
         }
-        .table td:nth-child(6) select,
-        .table td:nth-child(6) button {
+        .table td:nth-child(7) select,
+        .table td:nth-child(7) button {
             width: 100%;
             margin-bottom: 5px;
         }
         
+        /* Ensure disabled status elements stack nicely on mobile */
+        .table td:nth-child(7) .d-flex {
+            justify-content: flex-end; /* Align right */
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+        .table td:nth-child(7) .d-flex .badge {
+            margin-right: 0.25rem;
+        }
         .tab-navigation {
             width: 100%;
             justify-content: space-around;
@@ -916,6 +949,10 @@ $stats = [
                   <th>Email</th>
                   <th>Date</th>
                   <th>Time</th>
+                  <th>
+                    NOTES 
+                    <span class="cancel-note-style">*If cancelled only</span>
+                  </th>
                   <th>Update Status</th> 
                 </tr>
               </thead>
@@ -932,17 +969,41 @@ $stats = [
                     <td data-label="Email"><?= htmlspecialchars($row['users']['email']) ?></td>
                     <td data-label="Date"><?= date('M d, Y', strtotime($row['appointment_date'])) ?></td>
                     <td data-label="Time"><?= date('g:i A', strtotime($row['appointment_time'])) ?></td>
+                    <td data-label="Notes">
+                      <?php 
+                        $notes = htmlspecialchars($row['notes'] ?? '-');
+                        $cancellation_prefix = 'CLIENT CANCELLATION: ';
+                        
+                        // Display only the reason, stripping the prefix if it exists. Display as plain text.
+                        if (str_starts_with($notes, $cancellation_prefix)) {
+                            // Extract only the reason part
+                            echo substr($notes, strlen($cancellation_prefix));
+                        } else {
+                            // Display non-cancellation notes as is
+                            echo $notes;
+                        }
+                      ?>
+                    </td>
                     <td data-label="Status Update">
-                      <form method="POST" action="update_status.php" style="display: flex; align-items: center; gap: 0.5rem;">
-                        <input type="hidden" name="appointment_id" value="<?= $row['id'] ?>">
-                        <select name="status" class="form-select form-select-sm" style="width: auto; min-width: 130px;">
-                          <option value="Pending" <?= $row['status'] === 'Pending' ? 'selected' : '' ?>>Pending</option>
-                          <option value="Confirmed" <?= $row['status'] === 'Confirmed' ? 'selected' : '' ?>>Confirmed</option>
-                          <option value="Completed" <?= $row['status'] === 'Completed' ? 'selected' : '' ?>>Completed</option>
-                          <option value="Cancelled" <?= $row['status'] === 'Cancelled' ? 'selected' : '' ?>>Cancelled</option>
-                        </select>
-                        <button type="submit" class="btn btn-success btn-sm">Update</button>
-                      </form>
+                      <?php if ($row['status'] === 'Cancelled' || $row['status'] === 'Completed'): ?>
+                        <div class="d-flex align-items-center gap-2">
+                          <span class="badge status-<?= strtolower($row['status']) ?>">
+                              <?= $row['status'] ?>
+                          </span>
+                          <small class="text-muted">Status cannot be changed.</small>
+                        </div>
+                      <?php else: ?>
+                        <form method="POST" action="update_status.php" style="display: flex; align-items: center; gap: 0.5rem;">
+                          <input type="hidden" name="appointment_id" value="<?= $row['id'] ?>">
+                          <select name="status" class="form-select form-select-sm" style="width: auto; min-width: 130px;">
+                            <option value="Pending" <?= $row['status'] === 'Pending' ? 'selected' : '' ?>>Pending</option>
+                            <option value="Confirmed" <?= $row['status'] === 'Confirmed' ? 'selected' : '' ?>>Confirmed</option>
+                            <option value="Completed" <?= $row['status'] === 'Completed' ? 'selected' : '' ?>>Completed</option>
+                            <option value="Cancelled" <?= $row['status'] === 'Cancelled' ? 'selected' : '' ?>>Cancelled</option>
+                          </select>
+                          <button type="submit" class="btn btn-success btn-sm">Update</button>
+                        </form>
+                      <?php endif; ?>
                     </td>
                   </tr>
                 <?php endforeach; ?>
@@ -957,8 +1018,9 @@ $stats = [
     </div>
   </div>
 
-  <script src="mobile.js"></script> <script>
-    // Tab switching
+  <script src="mobile.js"></script> 
+  <script>
+    // Tab switching (Keep existing logic)
     const dashboardTab = document.getElementById('dashboardTab');
     const bookingsTab = document.getElementById('bookingsTab');
     const dashboardContent = document.getElementById('dashboardContent');
@@ -978,13 +1040,6 @@ $stats = [
       dashboardContent.style.display = 'none';
     });
     
-    // Initial display based on the active tab (Dashboard by default)
-    document.addEventListener('DOMContentLoaded', () => {
-        dashboardContent.style.display = 'block';
-        bookingsContent.style.display = 'none';
-    });
-
-
     // --- DASHBOARD: Recent Bookings Filter Function ---
     function filterRecentTable() {
       const statusSelect = document.getElementById('recentStatusFilter');
@@ -999,9 +1054,7 @@ $stats = [
       let visibleRowCount = 0;
 
       for (let i = 0; i < rows.length; i++) {
-        // Get the status from the data attribute set in PHP
         const rowStatus = rows[i].getAttribute('data-status');
-        
         const isVisible = (filterStatus === '' || rowStatus === filterStatus);
 
         if (isVisible) {
@@ -1012,7 +1065,6 @@ $stats = [
         }
       }
       
-      // Show/Hide "No Appointments Found" message
       if (noResults) {
           if (visibleRowCount === 0) {
               noResults.style.display = 'block';
@@ -1044,26 +1096,29 @@ $stats = [
       for (let i = 0; i < rows.length; i++) {
         const cells = rows[i].getElementsByTagName('td');
         
-        // Data for text search
         const patientName = cells[1]?.textContent || cells[1]?.innerText || '';
         const email = cells[2]?.textContent || cells[2]?.innerText || '';
         const date = cells[3]?.textContent || cells[3]?.innerText || '';
         
-        // Data for status filter - Get the *current* status from the dropdown in the 'Update Status' cell (index 5, shifted)
-        const statusCell = cells[5]; 
+        const statusCell = cells[6];
         const statusDropdown = statusCell ? statusCell.querySelector('select[name="status"]') : null;
-        const currentStatus = statusDropdown ? statusDropdown.value : '';
+        
+        let currentStatus = '';
+        if (statusDropdown) {
+             currentStatus = statusDropdown.value;
+        } else {
+            const statusBadge = statusCell ? statusCell.querySelector('.badge') : null;
+            if (statusBadge) {
+                currentStatus = statusBadge.textContent.trim();
+            }
+        }
 
-
-        // 1. Check Text Filter
         const textMatch = (patientName.toLowerCase().indexOf(filterText) > -1 ||
                             email.toLowerCase().indexOf(filterText) > -1 ||
                             date.toLowerCase().indexOf(filterText) > -1);
                             
-        // 2. Check Status Filter
         const statusMatch = (filterStatus === '' || currentStatus === filterStatus);
         
-        // Show row if BOTH match
         const isVisible = textMatch && statusMatch;
 
         if (isVisible) {
@@ -1074,7 +1129,6 @@ $stats = [
         }
       }
       
-      // Show/Hide "No Appointments Found" message
       if (noResults) {
           if (visibleRowCount === 0) {
               noResults.style.display = 'block';
@@ -1088,35 +1142,55 @@ $stats = [
     // End of Booking Management Search/Filter
 
 
-    // Dark Mode Toggle
+    // --- UNIFIED THEME LOGIC START ---
+    const THEME_KEY = 'dark-mode'; // Reverting key to match system standard (login.php, register.php)
+    const DARK_CLASS = 'dark-mode'; 
+
     const themeToggle = document.getElementById('themeToggle');
     const themeIcon = document.getElementById('themeIcon');
     const themeLabel = document.getElementById('themeLabel');
     const body = document.body;
+    
+    const sunIcon = '<circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>';
+    const moonIcon = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>';
 
-    const currentTheme = localStorage.getItem('theme') || 'light';
-    if (currentTheme === 'dark') {
-      body.classList.add('dark-mode');
-      themeLabel.textContent = 'Dark Mode';
-      themeIcon.innerHTML = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>';
+    function applyTheme(isDark) {
+        if (isDark) {
+            body.classList.add(DARK_CLASS);
+            themeLabel.textContent = 'Dark Mode';
+            themeIcon.innerHTML = moonIcon;
+            localStorage.setItem(THEME_KEY, 'true'); // Store 'true' for dark mode
+        } else {
+            body.classList.remove(DARK_CLASS);
+            themeLabel.textContent = 'Light Mode';
+            themeIcon.innerHTML = sunIcon;
+            localStorage.setItem(THEME_KEY, 'false'); // Store 'false' for light mode
+        }
+    }
+
+    // Initialize theme state on load using the system standard key
+    function initializeTheme() {
+        // Read the standard key that other pages (Login/Client) use
+        const currentThemeIsDark = localStorage.getItem(THEME_KEY) === 'true'; 
+        applyTheme(currentThemeIsDark);
     }
 
     themeToggle.addEventListener('click', () => {
-      body.classList.toggle('dark-mode');
-      
-      if (body.classList.contains('dark-mode')) {
-        themeLabel.textContent = 'Dark Mode';
-        themeIcon.innerHTML = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>';
-        localStorage.setItem('theme', 'dark');
-      } else {
-        themeLabel.textContent = 'Light Mode';
-        themeIcon.innerHTML = '<circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>';
-        localStorage.setItem('theme', 'light');
-      }
+        const isDark = !body.classList.contains(DARK_CLASS);
+        applyTheme(isDark);
+        
+        // Animation effect
+        themeIcon.style.transform = 'rotate(360deg)';
+        setTimeout(() => themeIcon.style.transform = 'rotate(0deg)', 500);
     });
-    
-    // Sidebar toggle function (relies on mobile.js to be included)
-    // Removed the manual inline function and rely entirely on mobile.js
+
+    document.addEventListener('DOMContentLoaded', () => {
+        initializeTheme(); 
+        
+        dashboardContent.style.display = 'block';
+        bookingsContent.style.display = 'none';
+    });
+    // --- UNIFIED THEME LOGIC END ---
   </script>
 </body>
 </html>

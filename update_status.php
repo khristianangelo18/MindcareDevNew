@@ -18,9 +18,10 @@ if (!in_array($status, $valid_statuses)) {
   exit;
 }
 
+// Added 'true' to ensure the Service Key is used for RLS bypass
 $result = supabaseUpdate('appointments', ['id' => $appointment_id], [
   'status' => $status
-]);
+], true);
 
 if (isset($result['error'])) {
   echo "<script>alert('Failed to update status.'); window.history.back();</script>";
