@@ -280,6 +280,11 @@ unset($_SESSION['message_type']);
     body.dark-mode .table {
       background: var(--card-bg);
     }
+
+    /* FIX: Ensure 'No action available' text is visible in dark mode table cells */
+    body.dark-mode .table td .text-muted {
+      color: var(--text-muted) !important; /* Forces a readable muted color */
+    }
     
     /* Table */
     .table {
