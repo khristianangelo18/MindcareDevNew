@@ -127,6 +127,7 @@ $stats = [
       --border-color: #3a3a3a;
     }
     
+    /* Desktop Sidebar */
     .sidebar {
       position: fixed;
       left: 0;
@@ -139,7 +140,7 @@ $stats = [
       z-index: 1000;
       display: flex;
       flex-direction: column;
-      transition: background-color 0.3s ease, border-color 0.3s ease;
+      transition: background-color 0.3s ease, border-color 0.3s ease, transform 0.3s ease;
     }
 
     .sidebar .logo-wrapper {
@@ -208,11 +209,24 @@ $stats = [
       color: var(--primary-teal);
     }
 
+    /* Desktop Main Content */
     .main-content {
       margin-left: 250px;
       padding: 2rem;
       min-height: 100vh;
+      transition: margin-left 0.3s ease;
     }
+    
+    /* Ensure desktop styling is active */
+    @media (min-width: 993px) {
+        body {
+            padding-left: 250px;
+        }
+        .main-content {
+            margin-left: 0;
+        }
+    }
+
 
     .dashboard-header {
       margin-bottom: 2rem;
@@ -577,11 +591,170 @@ $stats = [
         align-items: center;
         gap: 0.5rem;
     }
+
+    /* === MOBILE RESPONSIVENESS ADDITIONS === */
+
+    /* Mobile Menu Toggle button (created by mobile.js) */
+    .mobile-menu-toggle {
+        display: none;
+        position: fixed;
+        top: 1rem;
+        left: 1rem;
+        z-index: 1100; /* Must be higher than the sidebar */
+        background: var(--primary-teal);
+        border: none;
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        color: white;
+        cursor: pointer;
+        box-shadow: 0 4px 12px rgba(90, 208, 190, 0.3);
+        transition: all 0.3s ease;
+        align-items: center;
+        justify-content: center;
+    }
     
+    .mobile-menu-toggle svg {
+        width: 24px;
+        height: 24px;
+    }
+
+    @media (max-width: 992px) { 
+        .sidebar {
+            transform: translateX(-250px); /* Hide sidebar by default on mobile */
+            width: 250px;
+        }
+
+        .sidebar.show {
+            transform: translateX(0); /* Show sidebar when toggled */
+        }
+        
+        .main-content {
+            margin-left: 0; /* Remove desktop margin */
+            padding-top: 5rem; /* Add padding for the fixed menu toggle */
+        }
+        
+        .mobile-menu-toggle {
+            display: flex; /* Show menu toggle button */
+        }
+        
+        .dashboard-header {
+            margin-top: 1rem;
+        }
+
+        /* Stack stats vertically on small screens */
+        .stats-grid {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+
+        /* Stack filter and search vertically */
+        .filter-wrapper {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 0.75rem;
+        }
+
+        .search-wrapper, .search-input, .status-select {
+            max-width: 100%;
+            width: 100%;
+        }
+        
+        /* Adjust table view for small screens */
+        .table-responsive {
+          overflow-x: auto;
+          -webkit-overflow-scrolling: touch;
+          width: 100%;
+        }
+
+        .table {
+          min-width: 600px; /* Force minimum width to prevent text squishing */
+          width: 100%;
+          font-size: 0.85rem;
+        }
+
+        .table thead {
+            display: none; /* Hide header row on mobile for space */
+        }
+
+        .table tbody, .table tr, .table td {
+            display: block;
+            width: 100%;
+        }
+        
+        .table tr {
+            margin-bottom: 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+        }
+
+        .table td {
+            text-align: right;
+            padding: 0.75rem 1rem;
+            border-bottom: 1px dashed var(--border-color);
+            position: relative;
+        }
+
+        /* Display column headers as labels inside cells */
+        .table td:before {
+            content: attr(data-label);
+            position: absolute;
+            left: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: var(--primary-teal);
+            font-size: 0.75rem;
+        }
+        
+        /* Specific labels for tables */
+        #appointmentsTable td:nth-child(1):before { content: "ID"; }
+        #appointmentsTable td:nth-child(2):before { content: "Patient"; }
+        #appointmentsTable td:nth-child(3):before { content: "Email"; }
+        #appointmentsTable td:nth-child(4):before { content: "Date"; }
+        #appointmentsTable td:nth-child(5):before { content: "Time"; }
+        /* NOTE: The 'Notes' column was removed, so shift subsequent labels up */
+        #appointmentsTable td:nth-child(6):before { content: "Status Update"; } 
+        
+        #recentAppointmentsTable td:nth-child(1):before { content: "ID"; }
+        #recentAppointmentsTable td:nth-child(2):before { content: "Patient"; }
+        #recentAppointmentsTable td:nth-child(3):before { content: "Date"; }
+        #recentAppointmentsTable td:nth-child(4):before { content: "Time"; }
+        #recentAppointmentsTable td:nth-child(5):before { content: "Status"; }
+        #recentAppointmentsTable td:nth-child(6):before { content: "Booked At"; }
+        
+        .table td:last-child {
+            border-bottom: 0;
+        }
+        
+        /* Ensure update form elements stack nicely */
+        .table td:nth-child(6) form { /* Now the 6th cell */
+            flex-direction: column;
+            align-items: stretch;
+            width: 100%;
+        }
+        .table td:nth-child(6) select,
+        .table td:nth-child(6) button {
+            width: 100%;
+            margin-bottom: 5px;
+        }
+        
+        .tab-navigation {
+            width: 100%;
+            justify-content: space-around;
+        }
+        
+        .tab-btn {
+            padding: 0.75rem 0.5rem;
+            flex-grow: 1;
+            text-align: center;
+            font-size: 0.85rem;
+        }
+    }
   </style>
 </head>
 <body>
-  <div class="sidebar">
+  
+  <div class="sidebar" id="sidebar">
     <div class="logo-wrapper">
       <img src="images/Mindcare.png" alt="MindCare Logo" class="logo-img" />
     </div>
@@ -681,16 +854,16 @@ $stats = [
               <tbody>
                 <?php foreach ($recent_bookings as $row): ?>
                   <tr data-status="<?= $row['status'] ?>">
-                    <td><?= $row['id'] ?></td>
-                    <td><?= htmlspecialchars($row['users']['fullname']) ?></td>
-                    <td><?= date('M d, Y', strtotime($row['appointment_date'])) ?></td>
-                    <td><?= date('g:i A', strtotime($row['appointment_time'])) ?></td>
-                    <td>
+                    <td data-label="ID"><?= $row['id'] ?></td>
+                    <td data-label="Patient"><?= htmlspecialchars($row['users']['fullname']) ?></td>
+                    <td data-label="Date"><?= date('M d, Y', strtotime($row['appointment_date'])) ?></td>
+                    <td data-label="Time"><?= date('g:i A', strtotime($row['appointment_time'])) ?></td>
+                    <td data-label="Status">
                       <span class="badge status-<?= strtolower($row['status']) ?>">
                         <?= $row['status'] ?>
                       </span>
                     </td>
-                    <td><?= date('M d, Y g:i A', strtotime($row['created_at'])) ?></td>
+                    <td data-label="Booked At"><?= date('M d, Y g:i A', strtotime($row['created_at'])) ?></td>
                   </tr>
                 <?php endforeach; ?>
               </tbody>
@@ -743,25 +916,23 @@ $stats = [
                   <th>Email</th>
                   <th>Date</th>
                   <th>Time</th>
-                  <th>Notes</th>
                   <th>Update Status</th> 
                 </tr>
               </thead>
               <tbody>
                 <?php foreach ($allAppointments as $row): ?>
                   <tr>
-                    <td><?= $row['id'] ?></td>
-                    <td>
+                    <td data-label="ID"><?= $row['id'] ?></td>
+                    <td data-label="Patient">
                       <?= htmlspecialchars($row['users']['fullname']) ?>
                       <?php if ($row['users']['gender'] !== 'N/A'): ?>
                         <br><small class="text-muted"><?= htmlspecialchars($row['users']['gender']) ?></small>
                       <?php endif; ?>
                     </td>
-                    <td><?= htmlspecialchars($row['users']['email']) ?></td>
-                    <td><?= date('M d, Y', strtotime($row['appointment_date'])) ?></td>
-                    <td><?= date('g:i A', strtotime($row['appointment_time'])) ?></td>
-                    <td><?= htmlspecialchars($row['notes'] ?? '-') ?></td>
-                    <td>
+                    <td data-label="Email"><?= htmlspecialchars($row['users']['email']) ?></td>
+                    <td data-label="Date"><?= date('M d, Y', strtotime($row['appointment_date'])) ?></td>
+                    <td data-label="Time"><?= date('g:i A', strtotime($row['appointment_time'])) ?></td>
+                    <td data-label="Status Update">
                       <form method="POST" action="update_status.php" style="display: flex; align-items: center; gap: 0.5rem;">
                         <input type="hidden" name="appointment_id" value="<?= $row['id'] ?>">
                         <select name="status" class="form-select form-select-sm" style="width: auto; min-width: 130px;">
@@ -786,7 +957,7 @@ $stats = [
     </div>
   </div>
 
-  <script>
+  <script src="mobile.js"></script> <script>
     // Tab switching
     const dashboardTab = document.getElementById('dashboardTab');
     const bookingsTab = document.getElementById('bookingsTab');
@@ -806,6 +977,13 @@ $stats = [
       bookingsContent.style.display = 'block';
       dashboardContent.style.display = 'none';
     });
+    
+    // Initial display based on the active tab (Dashboard by default)
+    document.addEventListener('DOMContentLoaded', () => {
+        dashboardContent.style.display = 'block';
+        bookingsContent.style.display = 'none';
+    });
+
 
     // --- DASHBOARD: Recent Bookings Filter Function ---
     function filterRecentTable() {
@@ -871,8 +1049,8 @@ $stats = [
         const email = cells[2]?.textContent || cells[2]?.innerText || '';
         const date = cells[3]?.textContent || cells[3]?.innerText || '';
         
-        // Data for status filter - Get the *current* status from the dropdown in the 'Update Status' cell (index 6)
-        const statusCell = cells[6];
+        // Data for status filter - Get the *current* status from the dropdown in the 'Update Status' cell (index 5, shifted)
+        const statusCell = cells[5]; 
         const statusDropdown = statusCell ? statusCell.querySelector('select[name="status"]') : null;
         const currentStatus = statusDropdown ? statusDropdown.value : '';
 
@@ -936,6 +1114,9 @@ $stats = [
         localStorage.setItem('theme', 'light');
       }
     });
+    
+    // Sidebar toggle function (relies on mobile.js to be included)
+    // Removed the manual inline function and rely entirely on mobile.js
   </script>
 </body>
 </html>

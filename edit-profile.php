@@ -59,7 +59,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $_SESSION['user']['emergency_contact_relationship'] = $emergency_contact_relationship;
     $_SESSION['user']['emergency_contact_phone'] = $emergency_contact_phone;
 
-    header("Location: profile.php?");
+    header("Location: profile.php?success=" . urlencode("Profile updated successfully.")); // Added success message back
     exit;
   } else {
     $error = "Failed to update profile. Please try again.";
@@ -105,7 +105,7 @@ $user = array_merge([
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Edit Profile - MindCare</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
-  <style>
+  <link rel="stylesheet" href="mobile.css" /> <style>
     * {
       margin: 0;
       padding: 0;
@@ -121,7 +121,7 @@ $user = array_merge([
       --sidebar-bg: #f5f6f7;
       --card-bg: #ffffff;
       --border-color: #e9edf5;
-      --input-text: #2b2f38; /* NEW: Input text color for light mode */
+      --input-text: #2b2f38;
     }
 
     body {
@@ -139,14 +139,14 @@ $user = array_merge([
       --text-dark: #f1f1f1;
       --text-muted: #b0b0b0;
       --border-color: #3a3a3a;
-      --input-text: #f1f1f1; /* NEW: Input text color for dark mode */
+      --input-text: #f1f1f1;
     }
 
+    /* === Desktop Sidebar Styles === */
     .sidebar {
       position: fixed;
       left: 0;
       top: 0;
-      width: 250px;
       height: 100vh;
       background: var(--sidebar-bg);
       border-right: 1px solid var(--border-color);
@@ -154,8 +154,18 @@ $user = array_merge([
       z-index: 1000;
       display: flex;
       flex-direction: column;
-      transition: background-color 0.3s ease, border-color 0.3s ease;
+      transition: background-color 0.3s ease, border-color 0.3s ease, transform 0.3s ease;
     }
+    
+    @media (min-width: 993px) {
+        body {
+            padding-left: 250px;
+        }
+        .sidebar {
+            width: 250px;
+        }
+    }
+
 
     .sidebar .logo-wrapper {
       text-align: center;
@@ -223,14 +233,17 @@ $user = array_merge([
       color: var(--primary-teal);
     }
 
+    /* === Main Content Styles === */
     .main-wrapper {
-      margin-left: 250px;
       padding: 2rem;
       min-height: 100vh;
+      max-width: 1400px;
+      transition: padding-left 0.3s ease;
     }
 
     .content-inner {
-      max-width: 1400px;
+      max-width: 900px;
+      margin: 0 auto;
     }
 
     .page-header {
@@ -274,13 +287,14 @@ $user = array_merge([
       gap: 0.5rem;
     }
 
+    /* Restore Original Form Structure (using grid system) */
     .form-row {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
       gap: 1.5rem;
       margin-bottom: 1.5rem;
     }
-
+    
     .form-group {
       margin-bottom: 1.5rem;
     }
@@ -300,7 +314,7 @@ $user = array_merge([
       margin-left: 0.25rem;
     }
 
-    /* FIXED: Input and select text colors */
+    /* Input/Select/Textarea Styling (Fixed for dark mode) */
     .form-control,
     .form-select {
       width: 100%;
@@ -309,52 +323,33 @@ $user = array_merge([
       border-radius: 8px;
       font-size: 0.95rem;
       background: var(--bg-light);
-      color: var(--input-text); /* Uses the color from CSS variables */
+      color: var(--input-text);
       transition: all 0.3s ease;
     }
-
-    /* FIXED: Placeholder colors */
-    .form-control::placeholder,
-    .form-select::placeholder {
-      color: var(--text-muted);
-      opacity: 0.7;
+    
+    body.dark-mode .form-control,
+    body.dark-mode .form-select {
+        background: #1a1a1a;
+        border-color: var(--border-color);
+        color: var(--input-text);
     }
-
-    /* FIXED: Textarea placeholder */
-    textarea.form-control::placeholder {
-      color: var(--text-muted);
-      opacity: 0.7;
+    
+    body.dark-mode .form-select option {
+      background: #2a2a2a;
+      color: #f1f1f1;
     }
-
+    
     .form-control:focus,
     .form-select:focus {
       outline: none;
       border-color: var(--primary-teal);
       box-shadow: 0 0 0 3px rgba(90, 208, 190, 0.1);
       background: var(--card-bg);
-      color: var(--input-text); /* Maintain text color on focus */
-    }
-
-    /* FIXED: Dark mode specific styles */
-    body.dark-mode .form-control,
-    body.dark-mode .form-select {
-      background: #1a1a1a;
-      border-color: var(--border-color);
       color: var(--input-text);
     }
 
-    body.dark-mode .form-control:focus,
-    body.dark-mode .form-select:focus {
-      background: #2a2a2a;
-      color: var(--input-text);
-    }
 
-    /* FIXED: Select option colors in dark mode */
-    body.dark-mode .form-select option {
-      background: #2a2a2a;
-      color: #f1f1f1;
-    }
-
+    /* Button Group Styling */
     .button-group {
       display: flex;
       gap: 1rem;
@@ -405,11 +400,51 @@ $user = array_merge([
       padding: 1rem;
       margin-bottom: 1.5rem;
     }
+    
+    /* === MOBILE/RESPONSIVE STYLES (Adjusted) === */
+    /* Removed custom .menu-toggle styles as mobile.js handles it */
+
+    @media (max-width: 992px) { /* Tablet and Mobile */
+        body {
+            padding-left: 0; /* Remove desktop spacing */
+            padding-top: 5rem; /* Space for the fixed menu toggle created by mobile.js */
+        }
+
+        .sidebar {
+            transform: translateX(-250px); /* Hide sidebar (mobile.css handles show/hide) */
+            width: 250px;
+        }
+
+        .main-wrapper {
+            margin-left: 0; /* Remove desktop margin */
+            padding-top: 1.5rem; /* Reset to mobile default padding, relies on body padding-top: 5rem */
+        }
+        
+        /* Force form rows to stack vertically */
+        .form-row {
+            grid-template-columns: 1fr;
+            gap: 0;
+        }
+        
+        .form-row .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .button-group {
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        
+        .btn-save, .btn-cancel {
+            width: 100%;
+            text-align: center;
+        }
+    }
   </style>
 </head>
 <body>
-  <!-- Sidebar -->
-  <div class="sidebar">
+  
+  <div class="sidebar" id="sidebar">
     <div class="logo-wrapper">
       <img src="images/Mindcare.png" alt="MindCare Logo" class="logo-img" />
     </div>
@@ -470,7 +505,6 @@ $user = array_merge([
     </a>
   </div>
 
-  <!-- Main Content -->
   <div class="main-wrapper">
     <div class="content-inner">
       
@@ -698,11 +732,14 @@ $user = array_merge([
     </div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="mobile.js"></script> <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script>
    const toggleBtn = document.getElementById('themeToggle');
 const icon = document.getElementById('themeIcon');
 const label = document.getElementById('themeLabel');
+const sidebar = document.getElementById('sidebar'); 
+const menuToggle = document.querySelector('.mobile-menu-toggle'); // Use selector for button created by mobile.js
+
 
 const sunIcon = '<circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>';
 
@@ -728,6 +765,9 @@ toggleBtn.addEventListener('click', () => {
 });
 
 icon.style.transition = 'transform 0.5s ease';
+
+// REMOVED: Custom mobile toggle logic, as mobile.js handles it globally.
+// The sidebar element must still be present for mobile.js to work.
   </script>
 </body>
 </html>

@@ -416,7 +416,6 @@ $recommendationData = getRecommendations($assessment);
   </style>
 </head>
 <body>
-  <!-- Mobile Menu Toggle -->
   <button class="mobile-menu-toggle" onclick="toggleSidebar()">
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <line x1="3" y1="12" x2="21" y2="12"></line>
@@ -425,7 +424,6 @@ $recommendationData = getRecommendations($assessment);
     </svg>
   </button>
 
-  <!-- Sidebar -->
   <div class="sidebar" id="sidebar">
     <div class="logo-wrapper">
       <img src="images/Mindcare.png" alt="MindCare Logo" class="logo-img" />
@@ -488,16 +486,13 @@ $recommendationData = getRecommendations($assessment);
     </a>
   </div>
 
-  <!-- Main Content -->
   <div class="main-content">
-    <!-- Header -->
     <div class="dashboard-header">
       <h1>Your Personalized <span class="user-name">Recommendations</span></h1>
       <p class="date-time">Based on your latest mental health assessment</p>
     </div>
 
     <?php if ($assessment): ?>
-      <!-- Assessment Summary Card -->
       <div class="card assessment-summary">
         <div class="card-body">
           <h5>
@@ -532,7 +527,6 @@ $recommendationData = getRecommendations($assessment);
         </div>
       </div>
 
-      <!-- Recommendation Message -->
       <div class="alert-info-custom">
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 0.5rem; vertical-align: middle;">
           <circle cx="12" cy="12" r="10"></circle>
@@ -542,7 +536,6 @@ $recommendationData = getRecommendations($assessment);
         <strong><?= htmlspecialchars($recommendationData['message']) ?></strong>
       </div>
 
-      <!-- Recommendations Card -->
       <div class="card">
         <div class="card-body">
           <h5 style="margin-bottom: 1.5rem;">
@@ -565,8 +558,6 @@ $recommendationData = getRecommendations($assessment);
         </div>
       </div>
 
-      <!-- Action Buttons -->
-     <!-- Action Buttons -->
       <?php if ($recommendationData['severity'] !== 'minimal'): ?>
         <div class="card" style="margin-top: 1.5rem; padding: 1.5rem;">
           <div class="card-body text-center">
@@ -597,7 +588,6 @@ $recommendationData = getRecommendations($assessment);
       <?php endif; ?>
 
     <?php else: ?>
-      <!-- No Assessment Found -->
       <div class="card no-assessment-card">
         <div class="card-body">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -628,45 +618,65 @@ $recommendationData = getRecommendations($assessment);
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script>
-    // Dark Mode Toggle
+    // --- START UPDATED DARK MODE LOGIC ---
+    
+    // SVG icon strings
+    const sunIcon = `<circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>`;
+    const moonIcon = `<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>`;
+    
+    // Function to load and apply theme on page load
+    (function loadTheme() {
+      const body = document.body;
+      const themeIcon = document.getElementById('themeIcon');
+      const themeLabel = document.getElementById('themeLabel');
+      
+      // Check for saved theme preference using the correct key 'dark-mode'
+      const prefersDark = localStorage.getItem('dark-mode') === 'true';
+      
+      if (prefersDark) {
+        body.classList.add('dark-mode');
+        themeLabel.textContent = 'DARK MODE';
+        if (themeIcon) themeIcon.innerHTML = moonIcon;
+      } else {
+        themeLabel.textContent = 'LIGHT MODE';
+        if (themeIcon) themeIcon.innerHTML = sunIcon;
+      }
+    })();
+    
+    // Dark Mode Toggle function
     function toggleTheme() {
       const body = document.body;
       const themeIcon = document.getElementById('themeIcon');
       const themeLabel = document.getElementById('themeLabel');
       
       body.classList.toggle('dark-mode');
+      const isDark = body.classList.contains('dark-mode');
       
-      if (body.classList.contains('dark-mode')) {
-        localStorage.setItem('theme', 'dark');
+      // Save the state using the consistent key 'dark-mode'
+      localStorage.setItem('dark-mode', isDark); 
+      
+      // Update icon and label
+      if (themeIcon) {
+          themeIcon.style.transform = 'rotate(360deg)';
+          setTimeout(() => themeIcon.style.transform = 'rotate(0deg)', 500);
+      }
+      
+      if (isDark) {
         themeLabel.textContent = 'DARK MODE';
-        themeIcon.innerHTML = `
-          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-        `;
+        if (themeIcon) themeIcon.innerHTML = moonIcon;
       } else {
-        localStorage.setItem('theme', 'light');
         themeLabel.textContent = 'LIGHT MODE';
-        themeIcon.innerHTML = `
-          <circle cx="12" cy="12" r="5"></circle>
-          <line x1="12" y1="1" x2="12" y2="3"></line>
-          <line x1="12" y1="21" x2="12" y2="23"></line>
-          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-          <line x1="1" y1="12" x2="3" y2="12"></line>
-          <line x1="21" y1="12" x2="23" y2="12"></line>
-          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-        `;
+        if (themeIcon) themeIcon.innerHTML = sunIcon;
       }
     }
 
-    // Load saved theme
-    if (localStorage.getItem('theme') === 'dark') {
-      document.body.classList.add('dark-mode');
-      document.getElementById('themeLabel').textContent = 'DARK MODE';
-      document.getElementById('themeIcon').innerHTML = `
-        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-      `;
+    // Smooth transition for icon
+    const iconElement = document.getElementById('themeIcon');
+    if (iconElement) {
+        iconElement.style.transition = 'transform 0.5s ease';
     }
+
+    // --- END UPDATED DARK MODE LOGIC ---
 
     // Mobile Sidebar Toggle
     function toggleSidebar() {

@@ -108,12 +108,11 @@ if (empty($appointments) || !isset($appointments[0]['users'])) {
       --border-color: #3a3a3a;
     }
 
-    /* Sidebar */
+    /* Sidebar - Base styles */
     .sidebar {
       position: fixed;
       left: 0;
       top: 0;
-      width: 250px;
       height: 100vh;
       background: var(--sidebar-bg);
       border-right: 1px solid var(--border-color);
@@ -121,9 +120,20 @@ if (empty($appointments) || !isset($appointments[0]['users'])) {
       z-index: 1000;
       display: flex;
       flex-direction: column;
-      transition: background-color 0.3s ease, border-color 0.3s ease;
+      transition: background-color 0.3s ease, border-color 0.3s ease, transform 0.3s ease;
     }
 
+    /* FIX: Wrap desktop sidebar/body padding styles in a media query */
+    @media (min-width: 993px) {
+        body {
+            padding-left: 250px; /* Desktop spacing for sidebar */
+        }
+
+        .sidebar {
+            width: 250px;
+        }
+    }
+    
     .sidebar .logo-wrapper {
       text-align: center;
       margin-bottom: 2rem;
@@ -192,9 +202,9 @@ if (empty($appointments) || !isset($appointments[0]['users'])) {
 
     /* Main Content */
     .main-content {
-      margin-left: 250px;
       padding: 2rem;
       min-height: 100vh;
+      transition: margin-left 0.3s ease;
     }
 
     .page-header {
@@ -239,93 +249,95 @@ if (empty($appointments) || !isset($appointments[0]['users'])) {
     body.dark-mode .card:hover {
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
     }
-body.dark-mode .table thead {
-  background: #2a2a2a !important;  /* darker header */
-}
+    
+    body.dark-mode .table thead {
+      background: #2a2a2a !important;
+    }
 
-body.dark-mode .table tbody tr:hover {
-  background: rgba(90, 208, 190, 0.12) !important; /* subtle teal hover */
-}
+    body.dark-mode .table tbody tr:hover {
+      background: rgba(90, 208, 190, 0.12) !important;
+    }
 
-body.dark-mode .table td,
-body.dark-mode .table th {
-  color: var(--text-dark) !important; 
-  border-color: var(--border-color) !important;
-  background: var(--card-bg) !important;
-}
+    body.dark-mode .table td,
+    body.dark-mode .table th {
+      color: var(--text-dark) !important; 
+      border-color: var(--border-color) !important;
+      background: var(--card-bg) !important;
+    }
 
-body.dark-mode .table {
-  background: var(--card-bg);
-}
+    body.dark-mode .table {
+      background: var(--card-bg);
+    }
+    
     /* Table */
     .table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 1rem;
-}
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+    }
 
-.table thead {
-  background: var(--bg-light);
-}
+    .table thead {
+      background: var(--bg-light);
+    }
 
-.table th {
-  padding: 1rem;
-  text-align: left;
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  border-bottom: 2px solid var(--border-color);
-  transition: color 0.3s ease;
-}
+    .table th {
+      padding: 1rem;
+      text-align: left;
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 2px solid var(--border-color);
+      transition: color 0.3s ease;
+    }
 
-.table td {
-  padding: 1rem;
-  border-bottom: 1px solid var(--border-color);
-  font-size: 0.9rem;
-  color: var(--text-dark);
-  transition: color 0.3s ease;
-}
+    .table td {
+      padding: 1rem;
+      border-bottom: 1px solid var(--border-color);
+      font-size: 0.9rem;
+      color: var(--text-dark);
+      transition: color 0.3s ease;
+    }
 
-.table tbody tr:hover {
-  background: rgba(90, 208, 190, 0.05);
-}
+    .table tbody tr:hover {
+      background: rgba(90, 208, 190, 0.05);
+    }
 
-/* Ensure h5 headings in cards are visible in dark mode */
-.card h5 {
-  color: var(--text-dark);
-  transition: color 0.3s ease;
-}
+    /* Ensure h5 headings in cards are visible in dark mode */
+    .card h5 {
+      color: var(--text-dark);
+      transition: color 0.3s ease;
+    }
 
     /* Status Badges */
     .badge {
-  padding: 0.375rem 0.75rem;
-  border-radius: 12px;
-  font-size: 0.8rem;
-  font-weight: 600;
-  display: inline-block;
-}
+      padding: 0.375rem 0.75rem;
+      border-radius: 12px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      display: inline-block;
+    }
 
-.status-confirmed {
-  background-color: #28a745;
-  color: white;
-}
+    .status-confirmed {
+      background-color: #28a745;
+      color: white;
+    }
 
-.status-pending {
-  background-color: #ffc107;
-  color: #2b2f38;
-}
+    .status-pending {
+      background-color: #ffc107;
+      color: #2b2f38;
+    }
 
-.status-completed {
-  background-color: #17a2b8;
-  color: white;
-}
+    .status-completed {
+      background-color: #17a2b8;
+      color: white;
+    }
 
-.status-cancelled {
-  background-color: #dc3545;
-  color: white;
-}
+    .status-cancelled {
+      background-color: #dc3545;
+      color: white;
+    }
 
     /* Buttons */
     .btn {
@@ -377,44 +389,30 @@ body.dark-mode .table {
       color: #004085;
       border: 1px solid #b8daff;
     }
+    
+    /* REMOVED: .menu-toggle styles as mobile.js handles this */
 
-    /* Responsive */
-    @media (max-width: 768px) {
-      .sidebar {
-        width: 0;
-        padding: 0;
-        overflow: hidden;
-      }
-
+    /* Styles for screens up to 992px wide (Mobile/Tablet) */
+    @media (max-width: 992px) {
       .main-content {
-        margin-left: 0;
-      }
-
-      .table {
-        font-size: 0.8rem;
-      }
-
-      .table th, .table td {
-        padding: 0.5rem;
+        /* mobile.css will apply the necessary top padding for the fixed mobile menu button */
       }
     }
   </style>
 </head>
 <body>
-  <!-- Sidebar -->
-  <div class="sidebar">
-    <!-- Logo -->
+  
+  <div class="sidebar" id="sidebar">
     <div class="logo-wrapper">
       <img src="images/Mindcare.png" alt="MindCare Logo" class="logo-img" />
     </div>
 
-    <!-- Navigation Links -->
     <nav>
       <a class="nav-link" href="dashboard.php">
         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"></rect><rect x="14" y="3" width="7" height="5"></rect><rect x="14" y="12" width="7" height="9"></rect><rect x="3" y="16" width="7" height="5"></rect></svg>
         DASHBOARD
       </a>
-      <a class="nav-link" href="">
+      <a class="nav-link" href="resources.php">
       <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18"
           viewBox="0 0 24 24" fill="none" stroke="currentColor"
           stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -443,41 +441,32 @@ body.dark-mode .table {
       </a>
     </nav>
 
-    <!-- Dark Mode Toggle -->
     <div class="theme-toggle">
   <button id="themeToggle">
     <svg id="themeIcon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <!-- Sun icon (default for light mode) -->
       <circle cx="12" cy="12" r="5"></circle>
       <line x1="12" y1="1" x2="12" y2="3"></line>
       <line x1="12" y1="21" x2="12" y2="23"></line>
-      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-      <line x1="1" y1="12" x2="3" y2="12"></line>
-      <line x1="21" y1="12" x2="23" y2="12"></line>
-      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
     </svg>
     <span id="themeLabel">Light Mode</span>
   </button>
 </div>
 
-    <!-- Logout Button at Bottom -->
     <a href="logout.php" class="nav-link" style="margin-top: 1rem; color: #ef5350; border-top: 1px solid var(--border-color); padding-top: 1rem;">
       <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
       LOGOUT
     </a>
   </div>
 
-  <!-- Main Content -->
   <div class="main-content">
-    <!-- Page Header -->
     <div class="page-header">
       <h1>My Appointments, <span class="user-name"><?= htmlspecialchars($user_name) ?></span></h1>
       <p class="date-time"><?= date('l, F j, Y') ?></p>
     </div>
 
-    <!-- Appointments Table -->
     <div class="card">
       <div class="d-flex justify-content-between align-items-center mb-3">
         <h5 style="margin-bottom: 0;">Your Scheduled Appointments</h5>
@@ -531,45 +520,48 @@ body.dark-mode .table {
     </div>
   </div>
 
-  <!-- Dark Mode Script -->
-   <script src="mobile.js"></script>
+  <script src="mobile.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script>
-    // Dark Mode Toggle
-    // Dark mode toggle with SVG icons
-const toggleBtn = document.getElementById('themeToggle');
-const icon = document.getElementById('themeIcon');
-const label = document.getElementById('themeLabel');
+    // Get elements
+    const toggleBtn = document.getElementById('themeToggle');
+    const icon = document.getElementById('themeIcon');
+    const label = document.getElementById('themeLabel');
+    // Removed: const sidebar = document.getElementById('sidebar');
+    // Removed: const menuToggle = document.getElementById('menuToggle'); 
 
-// SVG icon strings
-const sunIcon = '<circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>';
+    // SVG icon strings
+    const sunIcon = '<circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>';
+    const moonIcon = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>';
 
-const moonIcon = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>';
+    // Check for saved theme preference
+    const prefersDark = localStorage.getItem('dark-mode') === 'true';
+    if (prefersDark) {
+      document.body.classList.add('dark-mode');
+      icon.innerHTML = moonIcon;
+      label.textContent = 'Dark Mode';
+    }
 
-// Check for saved theme preference
-const prefersDark = localStorage.getItem('dark-mode') === 'true';
-if (prefersDark) {
-  document.body.classList.add('dark-mode');
-  icon.innerHTML = moonIcon;
-  label.textContent = 'Dark Mode';
-}
+    // Toggle theme
+    toggleBtn.addEventListener('click', () => {
+      document.body.classList.toggle('dark-mode');
+      const isDark = document.body.classList.contains('dark-mode');
+      localStorage.setItem('dark-mode', isDark);
+      
+      // Animate icon
+      icon.style.transform = 'rotate(360deg)';
+      setTimeout(() => icon.style.transform = 'rotate(0deg)', 500);
+      
+      // Update icon and label
+      icon.innerHTML = isDark ? moonIcon : sunIcon;
+      label.textContent = isDark ? 'Dark Mode' : 'Light Mode';
+    });
 
-// Toggle theme
-toggleBtn.addEventListener('click', () => {
-  document.body.classList.toggle('dark-mode');
-  const isDark = document.body.classList.contains('dark-mode');
-  localStorage.setItem('dark-mode', isDark);
-  
-  // Animate icon
-  icon.style.transform = 'rotate(360deg)';
-  setTimeout(() => icon.style.transform = 'rotate(0deg)', 500);
-  
-  // Update icon and label
-  icon.innerHTML = isDark ? moonIcon : sunIcon;
-  label.textContent = isDark ? 'Dark Mode' : 'Light Mode';
-});
-
-// Smooth transition for icon
-icon.style.transition = 'transform 0.5s ease';
+    // Smooth transition for icon
+    icon.style.transition = 'transform 0.5s ease';
+    
+    // REMOVED: Custom toggle logic. mobile.js handles showing/hiding the sidebar.
+    // The link click logic is already inside mobile.js.
   </script>
 </body>
 </html>

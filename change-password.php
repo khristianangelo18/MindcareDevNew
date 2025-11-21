@@ -9,8 +9,15 @@ include 'supabase.php';
 
 $user_id = $_SESSION['user']['id'];
 $user_email = $_SESSION['user']['email'];
+$user_role = $_SESSION['user']['role'] ?? 'Patient'; // Default to Patient
 $message = '';
 $message_type = '';
+
+// Determine sidebar and profile redirect based on role
+$is_specialist = ($user_role === 'Specialist');
+$dashboard_link = $is_specialist ? 'specialist_dashboard.php' : 'dashboard.php';
+$profile_link = $is_specialist ? 'specialist_profile.php' : 'profile.php';
+$logout_link = $is_specialist ? 'admin_logout.php' : 'logout.php'; // Assuming specialist uses admin logout
 
 // Check for redirection message from a failed POST attempt
 $redirect_message = $_GET['message'] ?? '';
@@ -86,7 +93,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     // Success - Redirect to profile page (user stays logged in)
-    header("Location: profile.php?success=" . urlencode("Your password has been successfully updated."));
+    header("Location: " . $profile_link . "?success=" . urlencode("Your password has been successfully updated."));
     exit;
 }
 ?>
@@ -99,7 +106,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <title>Change Password - MindCare</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-  <style>
+  <link rel="stylesheet" href="mobile.css" /> <style>
     /* Reuse styles from profile/edit-profile for consistency */
     :root {
       --primary-teal: #5ad0be;
@@ -149,14 +156,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       background-color: var(--bg-light);
       color: var(--text-dark);
       transition: background-color 0.3s ease, color 0.3s ease;
-      padding-left: 250px; /* Space for sidebar */
     }
 
     .sidebar {
       position: fixed;
       left: 0;
       top: 0;
-      width: 250px;
       height: 100vh;
       background: var(--sidebar-bg);
       border-right: 1px solid var(--border-color);
@@ -164,6 +169,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       z-index: 1000;
       display: flex;
       flex-direction: column;
+      transition: transform 0.3s ease; 
+    }
+    
+    @media (min-width: 993px) {
+        body {
+            padding-left: 250px;
+        }
+        .sidebar {
+            width: 250px;
+        }
     }
     
     .sidebar .logo-wrapper {
@@ -187,7 +202,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       font-size: 0.625rem;
       text-transform: uppercase;
       letter-spacing: 0.5px;
+      text-decoration: none;
+      transition: all 0.3s ease;
     }
+    
+    .sidebar .nav-link:hover {
+      background-color: rgba(90, 208, 190, 0.1);
+      color: var(--primary-teal);
+    }
+
 
     .sidebar .nav-link.active {
       background-color: var(--primary-teal);
@@ -211,12 +234,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       font-weight: 500;
       text-transform: uppercase;
       letter-spacing: 0.5px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      transition: all 0.3s ease;
     }
+
+    .theme-toggle button:hover {
+      background-color: rgba(90, 208, 190, 0.1);
+      border-color: var(--primary-teal);
+      color: var(--primary-teal);
+    }
+
 
     .main-wrapper {
       padding: 2rem;
       max-width: 700px;
       margin: 0 auto;
+      transition: padding-left 0.3s ease; 
+    }
+    
+    @media (max-width: 992px) { /* Tablet and Mobile */
+        body {
+            padding-left: 0; 
+            padding-top: 5rem; 
+        }
+        .sidebar {
+            transform: translateX(-250px);
+            width: 250px;
+        }
+        .main-wrapper {
+            padding-top: 1.5rem; 
+        }
     }
     
     .page-header h1 {
@@ -232,6 +283,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       border-radius: 12px;
       padding: 2rem;
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+      transition: all 0.3s ease;
+    }
+
+    body.dark-mode .form-card {
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
     }
     
     .form-section-title {
@@ -244,6 +300,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       display: flex;
       align-items: center;
       gap: 0.5rem;
+      transition: color 0.3s ease;
+    }
+    
+    body.dark-mode .form-section-title {
+        color: var(--text-dark); /* Ensure visibility in dark mode */
     }
 
     .form-group {
@@ -256,9 +317,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       font-weight: 600;
       color: var(--text-dark);
       margin-bottom: 0.5rem;
+      transition: color 0.3s ease;
     }
     
-    /* --- INPUT STYLING FOR CONSISTENCY (COPIED FROM REGISTER.PHP) --- */
+    /* --- INPUT STYLING FOR CONSISTENCY --- */
     
     .input-wrapper {
       position: relative;
@@ -279,11 +341,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       padding-right: 48px; /* For eye icon space */
     }
     
-    /* FIX: Dark Mode Text Color */
     body.dark-mode .form-control {
         border-color: rgba(255, 255, 255, 0.1); 
         background-color: var(--field-bg);
-        color: var(--input-text) !important; /* Force light text color */
+        color: var(--input-text) !important; 
     }
     
     .form-control::placeholder {
@@ -349,7 +410,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       background-color: var(--field-bg);
     }
     
-    /* Validation Message box (from register.php) */
+    /* Validation Message box */
     .validation-message {
       font-size: 13px;
       margin-top: 6px;
@@ -381,19 +442,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       margin-top: 2rem;
       padding-top: 2rem;
       border-top: 1px solid var(--border-color);
+      align-items: center; 
     }
 
     .btn-save {
       background: linear-gradient(135deg, var(--btn-from), var(--btn-to));
       border: none;
       height: 56px;
-      border-radius: 999px;
+      border-radius: 8px; 
       font-weight: 600;
       color: white;
       padding: 0.875rem 2rem;
       cursor: pointer;
       box-shadow: 0 10px 24px rgba(48,170,153,.35);
       transition: all 0.3s ease;
+      flex-grow: 1; 
+      line-height: 1.5; 
     }
     
     .btn-save:hover {
@@ -401,62 +465,82 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     .btn-cancel {
+      display: flex; 
+      align-items: center; 
+      justify-content: center; 
+      height: 56px; 
+      
       background: transparent;
       color: var(--text-muted);
       border: 1px solid var(--border-color);
       padding: 0.875rem 2rem;
-      border-radius: 999px;
+      border-radius: 8px; 
       font-weight: 600;
       text-decoration: none;
-      display: inline-block;
       transition: all 0.3s ease;
+      flex-grow: 1; 
+      
     }
     
     .alert {
         margin-top: 2rem;
     }
-
   </style>
 </head>
 <body>
-  <div class="sidebar">
+  
+  <div class="sidebar" id="sidebar">
     <div class="logo-wrapper">
       <img src="images/Mindcare.png" alt="MindCare Logo" class="logo-img" />
     </div>
 
     <nav class="nav flex-column" style="flex: 1;">
-      <a class="nav-link" href="dashboard.php">
-        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
-        DASHBOARD
-      </a>
-      <a class="nav-link" href="resources.php">
-      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18"
-          viewBox="0 0 24 24" fill="none" stroke="currentColor"
-          stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/>
-      </svg>
-        RESOURCES
-      </a>
-      <a class="nav-link" href="assessment.php">
-        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-        ASSESSMENT
-      </a>
-      <a class="nav-link" href="book_appointment.php">
-        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-        BOOK APPOINTMENT
-      </a>
-      <a class="nav-link" href="appointments.php">
-        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
-        MY APPOINTMENTS
-      </a>
-      <a class="nav-link active" href="profile.php">
-        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-        PROFILE
-      </a>
-      <a class="nav-link" href="faq.php">
-        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-        FAQS
-      </a>
+      
+      <?php if (!$is_specialist): ?>
+        <a class="nav-link" href="dashboard.php">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+          DASHBOARD
+        </a>
+        <a class="nav-link" href="resources.php">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18"
+            viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/>
+        </svg>
+          RESOURCES
+        </a>
+        <a class="nav-link" href="assessment.php">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+          ASSESSMENT
+        </a>
+        <a class="nav-link" href="book_appointment.php">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+          BOOK APPOINTMENT
+        </a>
+        <a class="nav-link" href="appointments.php">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
+          MY APPOINTMENTS
+        </a>
+        <a class="nav-link" href="profile.php">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+          PROFILE
+        </a>
+        <a class="nav-link" href="faq.php">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+          FAQS
+        </a>
+        
+      <?php else: ?>
+        <a href="specialist_dashboard.php" class="nav-link">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+          DASHBOARD
+        </a>
+        <a href="specialist_profile.php" class="nav-link active">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+          PROFILE
+        </a>
+      <?php endif; ?>
+      
     </nav>
 
     <div class="theme-toggle">
@@ -471,7 +555,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       </button>
     </div>
 
-    <a href="logout.php" class="nav-link" style="margin-top: 1rem; color: #ef5350; border-top: 1px solid var(--border-color); padding-top: 1rem;">
+    <a href="<?= $logout_link ?>" class="nav-link" style="margin-top: 1rem; color: #ef5350; border-top: 1px solid var(--border-color); padding-top: 1rem;">
       <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
       LOGOUT
     </a>
@@ -512,7 +596,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <i id="toggleCurrent" class="fa-solid fa-eye"></i>
                     </span>
                 </div>
-                <p class="validation-message" id="current_password_error"></p>
+                <p class="validation-message" id="current_password_error">
+                  <?php if ($redirect_message && $target_field === 'current_password'): ?>
+                    <i class="fa-solid fa-circle-exclamation"></i> <?= htmlspecialchars($redirect_message) ?>
+                  <?php endif; ?>
+                </p>
             </div>
 
             <div class="mb-3">
@@ -531,7 +619,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <i id="toggleNew" class="fa-solid fa-eye"></i>
                     </span>
                 </div>
-                 <p class="validation-message" id="new_password_error"></p>
+                 <p class="validation-message" id="new_password_error">
+                    <?php if ($redirect_message && $target_field === 'new_password'): ?>
+                      <i class="fa-solid fa-circle-exclamation"></i> <?= htmlspecialchars($redirect_message) ?>
+                    <?php endif; ?>
+                 </p>
             </div>
 
             <div class="mb-3">
@@ -550,23 +642,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <i id="toggleConfirm" class="fa-solid fa-eye"></i>
                     </span>
                 </div>
-                 <p class="validation-message" id="confirm_password_error"></p>
+                 <p class="validation-message" id="confirm_password_error">
+                     <?php if ($redirect_message && $target_field === 'confirm_password'): ?>
+                      <i class="fa-solid fa-circle-exclamation"></i> <?= htmlspecialchars($redirect_message) ?>
+                    <?php endif; ?>
+                 </p>
             </div>
 
             <div class="button-group">
                 <button type="submit" class="btn-save" id="submitBtn">Update Password</button>
-                <a href="profile.php" class="btn-cancel">Cancel</a>
+                <a href="<?= $profile_link ?>" class="btn-cancel">Cancel</a>
             </div>
         </form>
     </div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="mobile.js"></script> <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script>
     // --- Dark Mode Toggle (Reused) ---
     const toggleBtn = document.getElementById('themeToggle');
     const icon = document.getElementById('themeIcon');
     const label = document.getElementById('themeLabel');
+    const sidebar = document.getElementById('sidebar'); 
 
     const sunIcon = '<circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>';
     const moonIcon = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>';
@@ -591,7 +688,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     });
     icon.style.transition = 'transform 0.5s ease';
     
-    // --- Eye Toggle Functionality (Updated for Font Awesome Icons) ---
+    
+    // --- Eye Toggle Functionality ---
     function togglePasswordVisibility(fieldId, iconElement) {
         const field = document.getElementById(fieldId);
         const icon = iconElement.querySelector('i');
@@ -610,16 +708,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     // --- Validation Functions (Copied from register.php) ---
     function showValidation(input, message, text, isError) {
+      // Clear previous states
+      input.classList.remove('success', 'error');
+      message.classList.remove('success', 'error');
+      
       if (isError) {
-        input.classList.remove('success');
         input.classList.add('error');
-        message.classList.remove('success');
         message.classList.add('error');
         message.innerHTML = `<i class="fa-solid fa-circle-exclamation"></i> ${text}`;
       } else {
-        input.classList.remove('error');
         input.classList.add('success');
-        message.classList.remove('error');
         message.classList.add('success');
         message.innerHTML = `<i class="fa-solid fa-circle-check"></i> ${text}`;
       }
@@ -655,13 +753,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Function to run validation on a field only if it's the target or non-empty/submission
         const shouldValidate = (field) => isSubmission || field.value.length > 0;
         
-        // --- Clear/Validate Current Password ---
+        // --- Current Password (Required Check) ---
         if (inputField === currentPass || isSubmission) {
             if (currentVal.length === 0) {
                  showValidation(currentPass, currentError, 'Current password is required.', true);
                  isValid = false;
             } else if (currentPass.value.length > 0 && !isSubmission) {
                  showValidation(currentPass, currentError, 'Ready for verification.', false);
+                 // Clear redirect error
+                 currentError.innerHTML = '';
             }
         } else if (!shouldValidate(currentPass)) {
              clearValidation(currentPass, currentError);
@@ -677,12 +777,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 isValid = false;
             } else {
                 showValidation(newPass, newError, 'Strong password.', false);
+                // Clear redirect error
+                newError.innerHTML = '';
             }
         } else if (!shouldValidate(newPass)) {
             clearValidation(newPass, newError);
         }
 
-        // --- New Password Different from Current ---
+        // --- New Password Different from Current (Run only if both are filled and new is valid length) ---
         if (newVal.length >= 6 && currentVal.length > 0 && newVal === currentVal) {
             showValidation(newPass, newError, 'New password must be different from the current password.', true);
             isValid = false;
@@ -700,6 +802,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     isValid = false;
                 } else if (newVal.length >= 6) {
                     showValidation(confirmPass, confirmError, 'Passwords match.', false);
+                    // Clear redirect error
+                    confirmError.innerHTML = '';
                 }
             } else if (confirmVal.length > 0) {
                 showValidation(confirmPass, confirmError, 'New password is required first.', true);
@@ -709,16 +813,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             clearValidation(confirmPass, confirmError);
         }
         
+        // Final check to see if all required fields were filled without errors
+        if (isSubmission && (!currentPass.value || !newPass.value || !confirmPass.value)) {
+            isValid = false;
+        }
+
         return isValid;
     }
 
 
-    // Attach validation to blur events (leaving the field)
+    // Attach validation events
     currentPass.addEventListener('blur', () => validatePasswordFields(currentPass));
     newPass.addEventListener('blur', () => validatePasswordFields(newPass));
     confirmPass.addEventListener('blur', () => validatePasswordFields(confirmPass));
-
-    // Attach validation to input events (typing)
     currentPass.addEventListener('input', () => validatePasswordFields(currentPass));
     newPass.addEventListener('input', () => validatePasswordFields(newPass));
     confirmPass.addEventListener('input', () => validatePasswordFields(confirmPass));
@@ -727,47 +834,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Form submission validation
     form.addEventListener('submit', function(e) {
       
-      let isValid = validatePasswordFields(null, true); // Force full validation on submission
+      let isValid = validatePasswordFields(null, true); 
 
       if (!isValid) {
         e.preventDefault();
         // Scroll to first error
-        const firstError = document.querySelector('.validation-message.error').closest('.mb-3');
+        const firstError = document.querySelector('.validation-message.error');
         if (firstError) {
-          firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          firstError.querySelector('.form-control').focus();
+          firstError.closest('.mb-3').scrollIntoView({ behavior: 'smooth', block: 'center' });
+          firstError.closest('.mb-3').querySelector('.form-control').focus();
         }
       } else {
-        // If client-side validation passes, allow PHP to run server-side logic
         submitBtn.disabled = true;
         submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Updating...';
       }
     });
 
-    // --- Server-side error display on redirect (Handles Incorrect Current Password) ---
-    const redirectMessage = "<?= $redirect_message ?>";
-    const redirectType = "<?= $redirect_type ?>";
-    const targetField = "<?= $target_field ?>";
+    // --- Server-side error display cleanup ---
+    // The PHP block handles displaying the initial error message after redirect.
+    // We only need to remove the client-side class additions here.
 
-    if (redirectMessage && redirectType === 'danger' && targetField) {
-        const targetInput = document.getElementById(targetField);
-        const targetErrorContainer = document.getElementById(targetField + '_error');
-        
-        if (targetInput && targetErrorContainer) {
-            // Display server error directly as a client validation failure
-            showValidation(targetInput, targetErrorContainer, redirectMessage, true);
-            
-            // Scroll to the error
-            targetInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            targetInput.focus();
-        } else {
-            // Display general alert if target field is missing
-            const alertDiv = document.querySelector('.alert');
-            if (alertDiv) {
-                alertDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }
+    const initialErrorCheck = (fieldId, errorContainerId) => {
+        const errorContainer = document.getElementById(errorContainerId);
+        const input = document.getElementById(fieldId);
+        if (errorContainer.innerHTML.trim() !== '') {
+            input.classList.add('error');
         }
-    }
+    };
+    
+    initialErrorCheck('current_password', 'current_password_error');
+    initialErrorCheck('new_password', 'new_password_error');
+    initialErrorCheck('confirm_password', 'confirm_password_error');
 
   </script>
 </body>

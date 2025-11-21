@@ -114,7 +114,7 @@ if (!empty($upcomingQuery)) {
       z-index: 1000;
       display: flex;
       flex-direction: column;
-      transition: background-color 0.3s ease, border-color 0.3s ease;
+      transition: transform 0.3s ease, background-color 0.3s ease, border-color 0.3s ease; /* Added transform transition */
     }
 
     .sidebar .logo-wrapper {
@@ -152,7 +152,7 @@ if (!empty($upcomingQuery)) {
       color: white;
     }
 
-      .theme-toggle {
+    .theme-toggle {
       margin-top: auto;
       padding-top: 1rem;
       border-top: 1px solid var(--border-color);
@@ -187,6 +187,7 @@ if (!empty($upcomingQuery)) {
       margin-left: 250px;
       padding: 2rem;
       min-height: 100vh;
+      transition: margin-left 0.3s ease; /* Added transition */
     }
 
     .content-inner {
@@ -322,6 +323,10 @@ if (!empty($upcomingQuery)) {
       gap: 3rem;
       flex-wrap: wrap;
     }
+    
+    .contact-row > div { /* Ensure contact items stay together */
+        min-width: 150px;
+    }
 
     .contact-label {
       font-size: 0.75rem;
@@ -447,10 +452,114 @@ if (!empty($upcomingQuery)) {
       font-weight: 600;
       color: var(--text-dark);
     }
+    
+    /* === MOBILE/RESPONSIVE STYLES === */
+
+    /* Mobile toggle button (Hidden on desktop) */
+    .menu-toggle {
+        display: none;
+        position: fixed;
+        top: 1rem;
+        left: 1rem;
+        z-index: 1001;
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        padding: 0.5rem;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .menu-toggle:hover {
+        background-color: rgba(90, 208, 190, 0.1);
+        border-color: var(--primary-teal);
+    }
+
+    .menu-toggle svg {
+        color: var(--primary-teal);
+        width: 24px;
+        height: 24px;
+    }
+
+    @media (max-width: 992px) { /* Tablet and Mobile */
+        .sidebar {
+            transform: translateX(-250px);
+        }
+        
+        .sidebar.show {
+            transform: translateX(0);
+        }
+
+        .main-wrapper {
+            margin-left: 0;
+            padding-top: 5rem; /* Space for the fixed menu toggle */
+        }
+        
+        .menu-toggle {
+            display: block;
+        }
+
+        .page-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+
+        .profile-actions {
+            flex-direction: column;
+            width: 100%;
+            gap: 0.75rem;
+        }
+
+        .profile-actions .btn-edit,
+        .profile-actions .btn-change-password {
+            width: 100%;
+            justify-content: center;
+        }
+        
+        .profile-card {
+            padding: 1.5rem;
+        }
+
+        .profile-header {
+            flex-direction: column;
+            gap: 1.5rem;
+            align-items: center;
+            text-align: center;
+            padding-bottom: 1.5rem;
+        }
+
+        .profile-info {
+            text-align: center;
+        }
+
+        .contact-row {
+            flex-direction: column;
+            gap: 1.5rem;
+            align-items: center;
+        }
+
+        .contact-row > div {
+            min-width: 100%;
+        }
+
+        .info-grid,
+        .appointment-cards {
+            grid-template-columns: 1fr;
+        }
+    }
   </style>
 </head>
 <body>
-  <div class="sidebar">
+  
+  <button class="menu-toggle" id="menuToggle">
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </button>
+  <div class="sidebar" id="sidebar">
     <div class="logo-wrapper">
       <img src="images/Mindcare.png" alt="MindCare Logo" class="logo-img" />
     </div>
@@ -743,6 +852,18 @@ toggleBtn.addEventListener('click', () => {
 
 // Smooth transition for icon
 icon.style.transition = 'transform 0.5s ease';
+
+// --- NEW MOBILE MENU TOGGLE LOGIC ---
+const menuToggle = document.getElementById('menuToggle');
+const sidebar = document.getElementById('sidebar');
+
+// Toggle sidebar visibility and add overlay effect
+menuToggle.addEventListener('click', () => {
+    sidebar.classList.toggle('show');
+    // Optional: Add an overlay to the main content when the sidebar is open
+    // For simplicity, we just toggle the class. A true overlay might require more CSS/JS.
+});
+// --- END NEW MOBILE MENU TOGGLE LOGIC ---
   </script>
 </body>
 </html>
